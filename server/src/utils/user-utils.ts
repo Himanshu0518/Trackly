@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import env from "@/config/env.js";
-import { JwtPayload } from "@/types/index.js";
+import { JwtPayload, UserRole } from "@/types/index.js";
 
 export const hashPassword = async (password: string): Promise<string> => {
   const salt = await bcrypt.genSalt(10);
@@ -15,8 +15,14 @@ export const comparePassword = (
   return bcrypt.compare(password, hashedPassword);
 };
 
-export const createAuthToken = (userId: string): string => {
-  return jwt.sign({ userId }, env.JWT_SECRET, { expiresIn: "1d" });
+export const createAuthToken = (
+  userId: string,
+  role: UserRole,
+  teamId: string | null
+): string => {
+  return jwt.sign({ userId, role, teamId }, env.JWT_SECRET, {
+    expiresIn: "1d",
+  });
 };
 
 export const verifyAuthToken = (token: string): JwtPayload => {

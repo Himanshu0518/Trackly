@@ -54,6 +54,8 @@ export interface IIssue {
 
 export interface JwtPayload {
   userId: string;
+  role: UserRole;
+  teamId: string | null;
 }
 
 // Extends Express Request so controllers get req.user typed

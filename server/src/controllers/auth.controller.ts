@@ -26,7 +26,11 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
     teamId: null,
   });
 
-  const token = createAuthToken(user._id.toString());
+  const token = createAuthToken(
+    user._id.toString(),
+    user.role,
+    user.teamId ? user.teamId.toString() : null
+  );
 
   res
     .status(201)
@@ -62,7 +66,11 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("Invalid credentials", 401);
   }
 
-  const token = createAuthToken(user._id.toString());
+  const token = createAuthToken(
+    user._id.toString(),
+    user.role,
+    user.teamId ? user.teamId.toString() : null
+  );
 
   res
     .cookie("accessToken", token, accessTokenCookieOptions)
