@@ -11,23 +11,42 @@ import {
 } from "@/validators/issue.validator.js";
 
 // ─── GET /api/issues ──────────────────────────────────────────────────────────
-// List all issues for the caller's team, with optional filters
+// List all issues for the caller's team, with full server-side filters & search
 export const getIssues = asyncHandler(async (req: Request, res: Response) => {
   const { teamId } = req.user!;
   if (!teamId) throw new ApiError("You are not part of any team", 403);
 
-  const { status, type, priority, assignedTo } = req.query as Record<string, string | undefined>;
+  const { status, type, priority, assignedTo, search, sortBy = "createdAt", order = "desc" } =
+    req.query as Record<string, string | undefined>;
 
   const filter: Record<string, unknown> = { teamId };
-  if (status)     filter.status     = status;
-  if (type)       filter.type       = type;
-  if (priority)   filter.priority   = priority;
-  if (assignedTo) filter.assignedTo = assignedTo;
+  if (status) filter.status = status;
+  if (type) filter.type = type;
+  if (priority) filter.priority = priority;
+
+  if (assignedTo) {
+    if (assignedTo === "none" || assignedTo === "unassigned") {
+      filter.assignedTo = null;
+    } else if (Types.ObjectId.isValid(assignedTo)) {
+      filter.assignedTo = new Types.ObjectId(assignedTo);
+    }
+  }
+
+  if (search && search.trim()) {
+    const searchRegex = new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    filter.$or = [
+      { title: { $regex: searchRegex } },
+      { description: { $regex: searchRegex } },
+    ];
+  }
+
+  const sortDirection = order === "asc" ? 1 : -1;
+  const sortOption: Record<string, 1 | -1> = { [sortBy]: sortDirection };
 
   const issues = await Issue.find(filter)
     .populate("createdBy", "name email")
     .populate("assignedTo", "name email")
-    .sort({ createdAt: -1 });
+    .sort(sortOption);
 
   res.json(new ApiResponse(issues, "Issues fetched successfully"));
 });
@@ -66,6 +85,12 @@ export const createIssue = asyncHandler(async (req: Request, res: Response) => {
     teamId: new Types.ObjectId(teamId),
   });
 
+  // Populate so the client can add it to its cache without re-fetching the list
+  await issue.populate([
+    { path: "createdBy", select: "name email" },
+    { path: "assignedTo", select: "name email" },
+  ]);
+
   res
     .status(201)
     .json(new ApiResponse(issue, "Issue created successfully", 201));
@@ -101,6 +126,13 @@ export const updateIssue = asyncHandler(async (req: Request, res: Response) => {
     issue.assignedTo = assignedTo ? new Types.ObjectId(assignedTo) : null;
 
   await issue.save();
+
+  // Populate so the client can patch its cache without re-fetching
+  await issue.populate([
+    { path: "createdBy", select: "name email" },
+    { path: "assignedTo", select: "name email" },
+    { path: "comments.userId", select: "name email" },
+  ]);
 
   res.json(new ApiResponse(issue, "Issue updated successfully"));
 });
@@ -140,6 +172,9 @@ export const addComment = asyncHandler(async (req: Request, res: Response) => {
   });
 
   await issue.save();
+
+  // Populate comment authors so the client can show names without re-fetching
+  await issue.populate({ path: "comments.userId", select: "name email" });
 
   res
     .status(201)
