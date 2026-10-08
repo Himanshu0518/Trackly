@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
@@ -10,6 +11,14 @@ import router from "./routers/index.js";
 const app = express();
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
+app.use(
+  cors({
+    origin: env.CLIENT_URL,
+    credentials: true, // required for cookies (accessToken)
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());

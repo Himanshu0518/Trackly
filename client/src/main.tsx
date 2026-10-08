@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { RouterProvider } from "react-router-dom";
 import { Toaster } from "sonner";
-import { store } from "./store";
+import { store } from "@/store/index";
 import router from "./routes";
 import "./index.css";
 
