@@ -8,6 +8,7 @@ import LoginPage from "@/pages/auth/LoginPage";
 import SignupPage from "@/pages/auth/SignupPage";
 import CreateTeamPage from "@/pages/onboarding/CreateTeamPage";
 import DashboardPage from "@/pages/DashboardPage";
+import BoardPage from "@/pages/BoardPage";
 import IssuesPage from "@/pages/IssuesPage";
 import IssueDetailPage from "@/pages/IssueDetailPage";
 import TeamPage from "@/pages/TeamPage";
@@ -49,6 +50,7 @@ const router = createBrowserRouter([
             element: <AppShell />,
             children: [
               { path: "dashboard", element: <DashboardPage /> },
+              { path: "board", element: <BoardPage /> },
               { path: "issues", element: <IssuesPage /> },
               { path: "issues/:id", element: <IssueDetailPage /> },
               { path: "team", element: <TeamPage /> },

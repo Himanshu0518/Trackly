@@ -1,6 +1,6 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, ListTodo, Users, Settings, LogOut, ChevronRight,
+  LayoutDashboard, ListTodo, Users, Settings, LogOut, ChevronRight, LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Board",     href: "/board",     icon: LayoutGrid },
   { label: "Issues",    href: "/issues",    icon: ListTodo },
   { label: "Team",      href: "/team",      icon: Users },
   { label: "Settings",  href: "/settings",  icon: Settings },

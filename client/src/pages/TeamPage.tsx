@@ -103,12 +103,14 @@ export default function TeamPage() {
 
         {isAdmin && (
           <Dialog open={addOpen} onOpenChange={handleOpenChange}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-1.5">
-                <UserPlus className="h-4 w-4" />
-                Add member
-              </Button>
-            </DialogTrigger>
+            <DialogTrigger
+              render={
+                <Button size="sm" className="gap-1.5">
+                  <UserPlus className="h-4 w-4" />
+                  Add member
+                </Button>
+              }
+            />
 
             <DialogContent className="sm:max-w-[420px]">
               <DialogHeader>

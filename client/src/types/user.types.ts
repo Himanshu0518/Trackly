@@ -159,7 +159,41 @@ export interface IssueFilters {
   type?: IssueType;
   priority?: IssuePriority;
   assignedTo?: string;
+  search?: string;
+  sortBy?: string;
+  order?: "asc" | "desc";
 }
+
+export interface TrendPoint {
+  key: string;
+  label: string;
+  created: number;
+  resolved: number;
+}
+
+export interface WorkloadRow {
+  name: string;
+  open: number;
+  done: number;
+}
+
+export interface DashboardStats {
+  total: number;
+  todo: number;
+  inProgress: number;
+  open: number;
+  done: number;
+  completionRate: number;
+  openByPriority: Record<IssuePriority, number>;
+  byType: Record<IssueType, { open: number; done: number }>;
+  trend: TrendPoint[];
+  createdInRange: number;
+  resolvedInRange: number;
+  workload: WorkloadRow[];
+  recent: IssueData[];
+}
+
+export type DashboardResponse = IApiResponse<DashboardStats>;
 
 export interface PopulatedUser {
   _id: string;

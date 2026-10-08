@@ -9,16 +9,21 @@ import type {
   AddCommentPayload,
   DeleteCommentPayload,
   CommentsResponse,
+  DashboardResponse,
 } from "@/types/user.types";
 
 export const issueApi = createApi({
   reducerPath: "issueApi",
-  tagTypes: ["Issue"],
+  tagTypes: ["Issue", "Dashboard"],
   baseQuery: fetchBaseQuery({
     baseUrl: API_BASE_URL,
     credentials: "include",
   }),
   endpoints: (builder) => ({
+    getDashboardStats: builder.query<DashboardResponse, void>({
+      query: () => "/dashboard/stats",
+      providesTags: ["Dashboard"],
+    }),
     getIssues: builder.query<IssuesResponse, IssueFilters | void>({
       query: (filters) => {
         const params = new URLSearchParams();
@@ -27,6 +32,9 @@ export const issueApi = createApi({
           if (filters.type) params.set("type", filters.type);
           if (filters.priority) params.set("priority", filters.priority);
           if (filters.assignedTo) params.set("assignedTo", filters.assignedTo);
+          if (filters.search) params.set("search", filters.search);
+          if (filters.sortBy) params.set("sortBy", filters.sortBy);
+          if (filters.order) params.set("order", filters.order);
         }
         const qs = params.toString();
         return `/issues${qs ? `?${qs}` : ""}`;
@@ -39,15 +47,15 @@ export const issueApi = createApi({
     }),
     createIssue: builder.mutation<IssueResponse, CreateIssuePayload>({
       query: (body) => ({ url: "/issues", method: "POST", body }),
-      invalidatesTags: ["Issue"],
+      invalidatesTags: ["Issue", "Dashboard"],
     }),
     updateIssue: builder.mutation<IssueResponse, UpdateIssuePayload>({
       query: ({ id, ...body }) => ({ url: `/issues/${id}`, method: "PATCH", body }),
-      invalidatesTags: (_result, _error, arg) => [{ type: "Issue", id: arg.id }, "Issue"],
+      invalidatesTags: (_result, _error, arg) => [{ type: "Issue", id: arg.id }, "Issue", "Dashboard"],
     }),
     deleteIssue: builder.mutation<void, string>({
       query: (id) => ({ url: `/issues/${id}`, method: "DELETE" }),
-      invalidatesTags: ["Issue"],
+      invalidatesTags: ["Issue", "Dashboard"],
     }),
     addComment: builder.mutation<CommentsResponse, AddCommentPayload>({
       query: ({ id, ...body }) => ({ url: `/issues/${id}/comments`, method: "POST", body }),
@@ -64,6 +72,7 @@ export const issueApi = createApi({
 });
 
 export const {
+  useGetDashboardStatsQuery,
   useGetIssuesQuery,
   useGetIssueByIdQuery,
   useCreateIssueMutation,
