@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { User } from "@/models/index.js";
-import { hashPassword, comparePassword, createAuthToken } from "@/utils/user-utils.js";
+import {
+  hashPassword,
+  comparePassword,
+  createAuthToken,
+} from "@/utils/user-utils.js";
 import { asyncHandler } from "@/utils/asyncHandler.js";
 import { accessTokenCookieOptions } from "@/utils/cookie-options.js";
 import { SignupBody, LoginBody } from "@/validators/auth.validator.js";
@@ -72,23 +76,21 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     user.teamId ? user.teamId.toString() : null
   );
 
-  res
-    .cookie("accessToken", token, accessTokenCookieOptions)
-    .json(
-      new ApiResponse(
-        {
-          token,
-          user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            teamId: user.teamId,
-          },
+  res.cookie("accessToken", token, accessTokenCookieOptions).json(
+    new ApiResponse(
+      {
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          teamId: user.teamId,
         },
-        "Login successful"
-      )
-    );
+      },
+      "Login successful"
+    )
+  );
 });
 
 // POST /api/auth/logout

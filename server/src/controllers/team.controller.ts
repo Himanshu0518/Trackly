@@ -5,7 +5,11 @@ import { createAuthToken } from "@/utils/user-utils.js";
 import { accessTokenCookieOptions } from "@/utils/cookie-options.js";
 import ApiError from "@/utils/api-error.js";
 import ApiResponse from "@/utils/api-response.js";
-import { CreateTeamBody, UpdateTeamBody, AddMemberBody } from "@/validators/team.validator.js";
+import {
+  CreateTeamBody,
+  UpdateTeamBody,
+  AddMemberBody,
+} from "@/validators/team.validator.js";
 
 // ─── POST /api/teams ──────────────────────────────────────────────────────────
 // Creates a new team and promotes the caller to ADMIN
@@ -26,11 +30,7 @@ export const createTeam = asyncHandler(async (req: Request, res: Response) => {
   await caller.save();
 
   // Re-issue token with updated role + teamId
-  const token = createAuthToken(
-    userId,
-    "ADMIN",
-    team._id.toString()
-  );
+  const token = createAuthToken(userId, "ADMIN", team._id.toString());
 
   res
     .status(201)
@@ -52,14 +52,16 @@ export const getMyTeam = asyncHandler(async (req: Request, res: Response) => {
 
 // ─── GET /api/teams/my/members ────────────────────────────────────────────────
 // Returns all members of the caller's team
-export const getTeamMembers = asyncHandler(async (req: Request, res: Response) => {
-  const { teamId } = req.user!;
-  if (!teamId) throw new ApiError("You are not part of any team", 404);
+export const getTeamMembers = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { teamId } = req.user!;
+    if (!teamId) throw new ApiError("You are not part of any team", 404);
 
-  const members = await User.find({ teamId }).select("-passwordHash");
+    const members = await User.find({ teamId }).select("-passwordHash");
 
-  res.json(new ApiResponse(members, "Members fetched successfully"));
-});
+    res.json(new ApiResponse(members, "Members fetched successfully"));
+  }
+);
 
 // ─── PATCH /api/teams/my ─────────────────────────────────────────────────────
 // ADMIN only — update team name / description
@@ -70,7 +72,10 @@ export const updateTeam = asyncHandler(async (req: Request, res: Response) => {
 
   const team = await Team.findByIdAndUpdate(
     teamId,
-    { ...(name && { name }), ...(description !== undefined && { description }) },
+    {
+      ...(name && { name }),
+      ...(description !== undefined && { description }),
+    },
     { new: true, runValidators: true }
   );
   if (!team) throw new ApiError("Team not found", 404);
@@ -87,10 +92,7 @@ export const deleteTeam = asyncHandler(async (req: Request, res: Response) => {
   await Team.findByIdAndDelete(teamId);
 
   // Detach every member (including the admin) from the team
-  await User.updateMany(
-    { teamId },
-    { $set: { teamId: null, role: "MEMBER" } }
-  );
+  await User.updateMany({ teamId }, { $set: { teamId: null, role: "MEMBER" } });
 
   // Re-issue token with cleared teamId + reverted role
   const token = createAuthToken(userId, "MEMBER", null);
@@ -114,32 +116,44 @@ export const addMember = asyncHandler(async (req: Request, res: Response) => {
   target.teamId = team_id_from_string(teamId);
   await target.save();
 
-  res.json(new ApiResponse(
-    { id: target._id, name: target.name, email: target.email, role: target.role },
-    "Member added successfully"
-  ));
+  res.json(
+    new ApiResponse(
+      {
+        id: target._id,
+        name: target.name,
+        email: target.email,
+        role: target.role,
+      },
+      "Member added successfully"
+    )
+  );
 });
 
 // ─── DELETE /api/teams/my/members/:memberId ───────────────────────────────────
 // ADMIN only — remove a member from the team
-export const removeMember = asyncHandler(async (req: Request, res: Response) => {
-  const { memberId } = req.params;
-  const { teamId, userId: adminId } = req.user!;
-  if (!teamId) throw new ApiError("You are not part of any team", 404);
+export const removeMember = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { memberId } = req.params;
+    const { teamId, userId: adminId } = req.user!;
+    if (!teamId) throw new ApiError("You are not part of any team", 404);
 
-  if (memberId === adminId) {
-    throw new ApiError("Admin cannot remove themselves — delete the team instead", 400);
+    if (memberId === adminId) {
+      throw new ApiError(
+        "Admin cannot remove themselves — delete the team instead",
+        400
+      );
+    }
+
+    const target = await User.findOne({ _id: memberId, teamId });
+    if (!target) throw new ApiError("Member not found in your team", 404);
+
+    target.teamId = null;
+    target.role = "MEMBER";
+    await target.save();
+
+    res.json(new ApiResponse(null, "Member removed successfully"));
   }
-
-  const target = await User.findOne({ _id: memberId, teamId });
-  if (!target) throw new ApiError("Member not found in your team", 404);
-
-  target.teamId = null;
-  target.role = "MEMBER";
-  await target.save();
-
-  res.json(new ApiResponse(null, "Member removed successfully"));
-});
+);
 
 // helper — avoids importing mongoose Types directly in the controller
 import { Types } from "mongoose";

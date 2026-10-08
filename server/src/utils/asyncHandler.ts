@@ -26,4 +26,4 @@ export const asyncHandler = (fn: AsyncRouteHandler) => {
   };
 };
 
-export default asyncHandler ;
+export default asyncHandler;

@@ -7,10 +7,10 @@ import dashboardRouter from "./dashboard.router.js";
 
 const router = Router();
 
-router.use("/auth",      authRouter);
-router.use("/users",     userRouter);
-router.use("/teams",     teamRouter);
-router.use("/issues",    issueRouter);
+router.use("/auth", authRouter);
+router.use("/users", userRouter);
+router.use("/teams", teamRouter);
+router.use("/issues", issueRouter);
 router.use("/dashboard", dashboardRouter);
 
 export default router;

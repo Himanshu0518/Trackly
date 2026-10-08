@@ -9,7 +9,9 @@
     "dev": "tsx watch src/index.ts",
     "seed": "tsx src/seed.ts",
     "start": "node dist/index.js",
-    "build": "tsc -p . && tsc-alias"
+    "build": "tsc -p . && tsc-alias",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [],
   "author": "",
@@ -42,6 +44,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
     "@types/node": "^26.6.4",
+    "prettier": "^3.9.9",
     "tsc-alias": "^1.9.7",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"

@@ -16,8 +16,15 @@ export const getIssues = asyncHandler(async (req: Request, res: Response) => {
   const { teamId } = req.user!;
   if (!teamId) throw new ApiError("You are not part of any team", 403);
 
-  const { status, type, priority, assignedTo, search, sortBy = "createdAt", order = "desc" } =
-    req.query as Record<string, string | undefined>;
+  const {
+    status,
+    type,
+    priority,
+    assignedTo,
+    search,
+    sortBy = "createdAt",
+    order = "desc",
+  } = req.query as Record<string, string | undefined>;
 
   const filter: Record<string, unknown> = { teamId };
   if (status) filter.status = status;
@@ -33,7 +40,10 @@ export const getIssues = asyncHandler(async (req: Request, res: Response) => {
   }
 
   if (search && search.trim()) {
-    const searchRegex = new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    const searchRegex = new RegExp(
+      search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+      "i"
+    );
     filter.$or = [
       { title: { $regex: searchRegex } },
       { description: { $regex: searchRegex } },
@@ -52,19 +62,21 @@ export const getIssues = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // ─── GET /api/issues/:id ──────────────────────────────────────────────────────
-export const getIssueById = asyncHandler(async (req: Request, res: Response) => {
-  const { teamId } = req.user!;
-  if (!teamId) throw new ApiError("You are not part of any team", 403);
+export const getIssueById = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { teamId } = req.user!;
+    if (!teamId) throw new ApiError("You are not part of any team", 403);
 
-  const issue = await Issue.findOne({ _id: req.params.id, teamId })
-    .populate("createdBy", "name email")
-    .populate("assignedTo", "name email")
-    .populate("comments.userId", "name email");
+    const issue = await Issue.findOne({ _id: req.params.id, teamId })
+      .populate("createdBy", "name email")
+      .populate("assignedTo", "name email")
+      .populate("comments.userId", "name email");
 
-  if (!issue) throw new ApiError("Issue not found", 404);
+    if (!issue) throw new ApiError("Issue not found", 404);
 
-  res.json(new ApiResponse(issue, "Issue fetched successfully"));
-});
+    res.json(new ApiResponse(issue, "Issue fetched successfully"));
+  }
+);
 
 // ─── POST /api/issues ─────────────────────────────────────────────────────────
 export const createIssue = asyncHandler(async (req: Request, res: Response) => {
@@ -117,11 +129,11 @@ export const updateIssue = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("Only the creator or an admin can reassign issues", 403);
   }
 
-  if (title !== undefined)       issue.title       = title;
+  if (title !== undefined) issue.title = title;
   if (description !== undefined) issue.description = description;
-  if (type !== undefined)        issue.type        = type;
-  if (status !== undefined)      issue.status      = status;
-  if (priority !== undefined)    issue.priority    = priority;
+  if (type !== undefined) issue.type = type;
+  if (status !== undefined) issue.status = status;
+  if (priority !== undefined) issue.priority = priority;
   if (assignedTo !== undefined)
     issue.assignedTo = assignedTo ? new Types.ObjectId(assignedTo) : null;
 
@@ -183,25 +195,30 @@ export const addComment = asyncHandler(async (req: Request, res: Response) => {
 
 // ─── DELETE /api/issues/:id/comments/:commentIndex ───────────────────────────
 // Only the comment author or ADMIN can delete a comment
-export const deleteComment = asyncHandler(async (req: Request, res: Response) => {
-  const { userId, teamId, role } = req.user!;
-  if (!teamId) throw new ApiError("You are not part of any team", 403);
+export const deleteComment = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { userId, teamId, role } = req.user!;
+    if (!teamId) throw new ApiError("You are not part of any team", 403);
 
-  const issue = await Issue.findOne({ _id: req.params.id, teamId });
-  if (!issue) throw new ApiError("Issue not found", 404);
+    const issue = await Issue.findOne({ _id: req.params.id, teamId });
+    if (!issue) throw new ApiError("Issue not found", 404);
 
-  const index = parseInt(String(req.params.commentIndex), 10);
-  if (isNaN(index) || index < 0 || index >= issue.comments.length) {
-    throw new ApiError("Comment not found", 404);
+    const index = parseInt(String(req.params.commentIndex), 10);
+    if (isNaN(index) || index < 0 || index >= issue.comments.length) {
+      throw new ApiError("Comment not found", 404);
+    }
+
+    const comment = issue.comments[index];
+    if (role !== "ADMIN" && comment.userId.toString() !== userId) {
+      throw new ApiError(
+        "Only the comment author or an admin can delete this comment",
+        403
+      );
+    }
+
+    issue.comments.splice(index, 1);
+    await issue.save();
+
+    res.json(new ApiResponse(null, "Comment deleted successfully"));
   }
-
-  const comment = issue.comments[index];
-  if (role !== "ADMIN" && comment.userId.toString() !== userId) {
-    throw new ApiError("Only the comment author or an admin can delete this comment", 403);
-  }
-
-  issue.comments.splice(index, 1);
-  await issue.save();
-
-  res.json(new ApiResponse(null, "Comment deleted successfully"));
-});
+);

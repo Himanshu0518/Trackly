@@ -22,14 +22,14 @@ const router = Router();
 router.use(verifyJWT);
 
 // Issues CRUD
-router.get("/",          getIssues);
-router.get("/:id",       getIssueById);
-router.post("/",         validate(createIssueSchema), createIssue);
-router.patch("/:id",     validate(updateIssueSchema), updateIssue);
-router.delete("/:id",    deleteIssue);
+router.get("/", getIssues);
+router.get("/:id", getIssueById);
+router.post("/", validate(createIssueSchema), createIssue);
+router.patch("/:id", validate(updateIssueSchema), updateIssue);
+router.delete("/:id", deleteIssue);
 
 // Comments
-router.post("/:id/comments",                     validate(addCommentSchema), addComment);
-router.delete("/:id/comments/:commentIndex",     deleteComment);
+router.post("/:id/comments", validate(addCommentSchema), addComment);
+router.delete("/:id/comments/:commentIndex", deleteComment);
 
 export default router;

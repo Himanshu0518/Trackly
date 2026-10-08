@@ -32,6 +32,11 @@ router.get("/my/members", getTeamMembers);
 router.patch("/my", verifyAdmin, validate(updateTeamSchema), updateTeam);
 router.delete("/my", verifyAdmin, deleteTeam);
 router.post("/my/members", verifyAdmin, validate(addMemberSchema), addMember);
-router.delete("/my/members/:memberId", verifyAdmin, validate(removeMemberSchema), removeMember);
+router.delete(
+  "/my/members/:memberId",
+  verifyAdmin,
+  validate(removeMemberSchema),
+  removeMember
+);
 
 export default router;

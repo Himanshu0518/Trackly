@@ -29,8 +29,12 @@ if (!DATABASE_URI) {
 
 const CommentSchema = new mongoose.Schema(
   {
-    userId:    { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    text:      { type: String, required: true },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    text: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
   },
   { _id: false }
@@ -38,49 +42,77 @@ const CommentSchema = new mongoose.Schema(
 
 const UserSchema = new mongoose.Schema(
   {
-    name:         { type: String, required: true },
-    email:        { type: String, required: true, unique: true, lowercase: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
     passwordHash: { type: String, required: true },
-    teamId:       { type: mongoose.Schema.Types.ObjectId, ref: "Team", default: null },
-    role:         { type: String, enum: ["ADMIN", "MEMBER"], required: true },
+    teamId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Team",
+      default: null,
+    },
+    role: { type: String, enum: ["ADMIN", "MEMBER"], required: true },
   },
   { timestamps: true }
 );
 
 const TeamSchema = new mongoose.Schema(
   {
-    name:        { type: String, required: true },
+    name: { type: String, required: true },
     description: { type: String, default: "" },
-    createdBy:   { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
   { timestamps: true }
 );
 
 const IssueSchema = new mongoose.Schema(
   {
-    title:       { type: String, required: true },
+    title: { type: String, required: true },
     description: { type: String, required: true },
-    type:        { type: String, enum: ["BUG", "FEATURE"], required: true },
-    status:      { type: String, enum: ["TODO", "IN_PROGRESS", "DONE"], default: "TODO" },
-    priority:    { type: String, enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"], default: "MEDIUM" },
-    createdBy:   { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    assignedTo:  { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
-    teamId:      { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
-    comments:    { type: [CommentSchema], default: [] },
+    type: { type: String, enum: ["BUG", "FEATURE"], required: true },
+    status: {
+      type: String,
+      enum: ["TODO", "IN_PROGRESS", "DONE"],
+      default: "TODO",
+    },
+    priority: {
+      type: String,
+      enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+      default: "MEDIUM",
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    teamId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Team",
+      required: true,
+    },
+    comments: { type: [CommentSchema], default: [] },
   },
   { timestamps: true }
 );
 
 // Use existing models if already registered (safe for re-runs)
-const User  = mongoose.models["User"]  ?? mongoose.model("User",  UserSchema);
-const Team  = mongoose.models["Team"]  ?? mongoose.model("Team",  TeamSchema);
+const User = mongoose.models["User"] ?? mongoose.model("User", UserSchema);
+const Team = mongoose.models["Team"] ?? mongoose.model("Team", TeamSchema);
 const Issue = mongoose.models["Issue"] ?? mongoose.model("Issue", IssueSchema);
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
-const ADMIN_EMAIL  = "admin@trackly.dev";
+const ADMIN_EMAIL = "admin@trackly.dev";
 const MEMBER_EMAIL = "member@trackly.dev";
-const PASSWORD_ADMIN  = "Admin123!";
+const PASSWORD_ADMIN = "Admin123!";
 const PASSWORD_MEMBER = "Member123!";
 
 async function main() {
@@ -101,7 +133,7 @@ async function main() {
 
   // ── Create users (no teamId yet) ─────────────────────────────────────────
   const [adminHash, memberHash] = await Promise.all([
-    bcrypt.hash(PASSWORD_ADMIN,  10),
+    bcrypt.hash(PASSWORD_ADMIN, 10),
     bcrypt.hash(PASSWORD_MEMBER, 10),
   ]);
 
@@ -370,9 +402,7 @@ async function main() {
     },
   ];
 
-  await Issue.insertMany(
-    issues.map((i) => ({ ...i, teamId: team._id }))
-  );
+  await Issue.insertMany(issues.map((i) => ({ ...i, teamId: team._id })));
 
   console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("✅  Seed complete!");
