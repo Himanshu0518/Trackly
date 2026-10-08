@@ -7,6 +7,7 @@ import type {
   MeResponse,
   AllUserResponse,
   UpdateMePayload,
+  UserSearchResponse,
 } from "@/types/user.types";
 
 export const userApi = createApi({
@@ -49,6 +50,10 @@ export const userApi = createApi({
       query: () => "/users",
       providesTags: ["User"],
     }),
+    searchUsers: builder.query<UserSearchResponse, string>({
+      query: (q) => `/users/search?q=${encodeURIComponent(q)}`,
+      // No cache tag needed — results are ephemeral search results
+    }),
   }),
 });
 
@@ -59,4 +64,5 @@ export const {
   useLogOutMutation,
   useUpdateMeMutation,
   useGetAllUsersQuery,
+  useSearchUsersQuery,
 } = userApi;

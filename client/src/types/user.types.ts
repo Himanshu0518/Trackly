@@ -208,3 +208,12 @@ export type CommentsResponse = IApiResponse<CommentData[]>;
 export interface UpdateMePayload {
   name: string;
 }
+
+// ─── User search (GET /users/search?q=) ──────────────────────────────────────
+export interface UserSearchResult {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+export type UserSearchResponse = IApiResponse<UserSearchResult[]>;
