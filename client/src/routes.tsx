@@ -14,6 +14,8 @@ import IssueDetailPage from "@/pages/IssueDetailPage";
 import TeamPage from "@/pages/TeamPage";
 import SettingsPage from "@/pages/SettingsPage";
 
+import NotFoundPage from "@/pages/NotFoundPage";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -58,6 +60,12 @@ const router = createBrowserRouter([
             ],
           },
         ],
+      },
+
+      // Fallback 404 route
+      {
+        path: "*",
+        element: <NotFoundPage />,
       },
     ],
   },

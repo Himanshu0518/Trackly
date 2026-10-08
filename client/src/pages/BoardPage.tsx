@@ -203,11 +203,14 @@ export default function BoardPage() {
 
     if (!targetStatus || draggedIssue.status === targetStatus) return;
 
+    const targetColumn = COLUMNS.find((c) => c.id === targetStatus);
+    const targetLabel = targetColumn?.label ?? targetStatus;
+
     try {
       await updateIssue({ id: draggedIssue._id, status: targetStatus }).unwrap();
-      toast.success(`Moved to ${COLUMNS.find((c) => c.id === targetStatus)?.label}`);
+      toast.success(`Moved issue to ${targetLabel}`);
     } catch {
-      toast.error("Failed to update status");
+      toast.error(`Failed to update status. Reverted to previous column.`);
     }
   };
 

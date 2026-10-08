@@ -35,12 +35,14 @@ export const userApi = createApi({
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
+          // resetApiState clears all cache — no need for invalidatesTags
+          // (invalidatesTags would trigger a /users/me refetch which would 401)
           dispatch(userApi.util.resetApiState());
         } catch (err) {
           console.error("Logout error:", err);
         }
       },
-      invalidatesTags: ["User"],
+      // Do NOT add invalidatesTags here — resetApiState already clears everything
     }),
     updateMe: builder.mutation<MeResponse, UpdateMePayload>({
       query: (body) => ({ url: "/users/me", method: "PATCH", body }),

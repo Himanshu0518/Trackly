@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { useCurrentUserQuery } from "@/services/auth.services";
-import { setUser, clearUser, setInitialized } from "@/store/authSlice";
-import { useAppDispatch } from "@/store/authSlice";
+import { setUser, clearUser, setInitialized, useAppSelector, useAppDispatch } from "@/store/authSlice";
 import { Loader2 } from "lucide-react";
 
 /**
@@ -10,14 +9,21 @@ import { Loader2 } from "lucide-react";
  * It fires ONE /users/me request on app boot to hydrate
  * the Redux auth state, then renders all children.
  *
+ * Once the user logs out (user === null, isInitialized === true),
+ * the query is skipped entirely — no further 401 calls are made.
  * AuthLayout (below this) reads from Redux only — no duplicate requests.
  */
 export default function RootLayout() {
   const dispatch = useAppDispatch();
+  const isInitialized = useAppSelector((s) => s.auth.isInitialized);
+  const user = useAppSelector((s) => s.auth.user);
 
-  // Single auth-hydration call on app boot.
-  // A 401 from /users/me means no active session — that's fine, not an error.
+  // Skip the query if we already know there's no session (post-logout or after first 401).
+  // This prevents the spurious /users/me 401 calls after logout.
+  const shouldSkip = isInitialized && !user;
+
   const { data, isLoading, isError, isFetching } = useCurrentUserQuery(undefined, {
+    skip: shouldSkip,
     // Don't refetch on window focus — the cookie is stable until logout
     refetchOnFocus: false,
     refetchOnReconnect: false,
@@ -29,17 +35,17 @@ export default function RootLayout() {
     if (data?.data) {
       dispatch(setUser(data.data));
     } else if (isError) {
-      // 401 = no session; mark as initialized so guards can redirect
+      // 401 = no active session; mark initialized so auth guards can redirect
       dispatch(clearUser());
     }
   }, [data, isError, isLoading, isFetching, dispatch]);
 
-  // Mark initialized even when there's no user (isError covers 401)
+  // Mark initialized when query is skipped (post-logout state)
   useEffect(() => {
-    if (!isLoading && !isFetching && isError) {
+    if (shouldSkip && !isInitialized) {
       dispatch(setInitialized());
     }
-  }, [isLoading, isFetching, isError, dispatch]);
+  }, [shouldSkip, isInitialized, dispatch]);
 
   // Block rendering until we know the auth state
   if (isLoading || isFetching) {

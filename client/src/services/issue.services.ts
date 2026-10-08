@@ -52,6 +52,35 @@ export const issueApi = createApi({
     updateIssue: builder.mutation<IssueResponse, UpdateIssuePayload>({
       query: ({ id, ...body }) => ({ url: `/issues/${id}`, method: "PATCH", body }),
       invalidatesTags: (_result, _error, arg) => [{ type: "Issue", id: arg.id }, "Issue", "Dashboard"],
+      async onQueryStarted({ id, ...patch }, { dispatch, queryFulfilled }) {
+        // Optimistically update the issues list cache
+        const patchResultList = dispatch(
+          issueApi.util.updateQueryData("getIssues", undefined, (draft) => {
+            if (draft?.data) {
+              const item = draft.data.find((i) => i._id === id);
+              if (item) {
+                Object.assign(item, patch);
+              }
+            }
+          })
+        );
+
+        // Optimistically update the single issue cache
+        const patchResultDetail = dispatch(
+          issueApi.util.updateQueryData("getIssueById", id, (draft) => {
+            if (draft?.data) {
+              Object.assign(draft.data, patch);
+            }
+          })
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResultList.undo();
+          patchResultDetail.undo();
+        }
+      },
     }),
     deleteIssue: builder.mutation<void, string>({
       query: (id) => ({ url: `/issues/${id}`, method: "DELETE" }),
