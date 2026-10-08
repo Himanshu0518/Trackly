@@ -1,137 +1,149 @@
 # Trackly
 
-**Trackly** is a modern, full-stack issue tracking and project management web application designed for engineering teams to streamline bug tracking, feature requests, and workflow management. 
+> A full-stack, team-based issue tracker built for engineering teams to manage bugs, feature requests, and workflows with a clean Kanban board and real-time analytics.
 
-Users can sign up, create or join a team, manage roles (`ADMIN` and `MEMBER`), assign tasks, collaborate through comments, track issues across an interactive Kanban board, and monitor team productivity via real-time dashboard analytics.
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+
+---
+
+## Overview
+
+Trackly is a collaborative issue tracking web application. A user signs up, creates a team (becoming its `ADMIN`), invites members, and then manages work through a structured workflow. Issues can be assigned, prioritized, commented on, and tracked on a drag-and-drop Kanban board. Admins get a real-time analytics dashboard for team-wide progress visibility.
 
 ---
 
 ## Features
 
-- **Authentication & Authorization**: Secure JWT cookie-based authentication with bcrypt password hashing and route protection.
-- **Team Workspaces & Role-Based Access Control (RBAC)**:
-  - Every user belongs to a team workspace.
-  - Signing up creates a team and assigns the creator the `ADMIN` role.
-  - Admins can invite/add new members, manage roles, and delete members.
-- **Issue Management & Tracking**:
-  - Full CRUD operations for issues of type `BUG` or `FEATURE`.
-  - Configurable priority levels: `LOW`, `MEDIUM`, `HIGH`, and `CRITICAL`.
-  - Workflow status transitions: `TODO` → `IN_PROGRESS` → `DONE`.
-  - Issue assignment, search, multi-criteria filtering, and sorting (by date, priority, title, etc.).
-- **Interactive Kanban Board**: Visual drag-and-drop board to quickly update issue statuses and reorder workflows.
-- **Issue Comments & Collaboration**: Threaded conversation history on each issue with timestamps and author details.
-- **Analytics & Dashboard Overview**: Aggregated metrics and charts displaying issue distribution by status, priority breakdown, issue types, recent activity, and team member workload.
-- **Modern Responsive UI & Theme Support**: Built with dark/light mode support, toast notifications, and smooth animations.
+| Feature | Description |
+|---|---|
+| **Authentication** | JWT cookie-based auth with bcrypt password hashing |
+| **Team Workspaces** | Isolated team environments; one team per user |
+| **Role-Based Access** | `ADMIN` and `MEMBER` roles with enforced RBAC middleware |
+| **Issue Management** | Full CRUD with type (`BUG` / `FEATURE`), priority, assignee, and comments |
+| **Status Workflow** | `TODO` → `IN_PROGRESS` → `DONE` |
+| **Kanban Board** | Drag-and-drop with instant optimistic UI updates and automatic rollback on failure |
+| **Issue Filtering** | Server-side filtering by status, type, priority, assignee, and full-text search |
+| **Comments** | Threaded discussion on each issue |
+| **Analytics Dashboard** | Aggregated charts: by status, priority, type, and per-member workload |
+| **Theme Support** | System-aware dark / light mode |
 
 ---
 
-## Technologies Used
+## Tech Stack
 
 ### Frontend
-- **Framework & Language**: React 19, TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS v4, `@fontsource-variable/geist`
-- **State Management**: Redux Toolkit & React-Redux
-- **Routing**: React Router DOM (`react-router-dom` v7)
-- **Component UI & Icons**: Base UI, Shadcn/Radix primitives, Lucide React, Sonner (Toasts)
-- **Charts & Drag-and-Drop**: Recharts, `@dnd-kit/core`, `@dnd-kit/sortable`
-- **Form Handling & Validation**: React Hook Form, Zod, `@hookform/resolvers`
+
+| Layer | Technology |
+|---|---|
+| Framework | React 19 + TypeScript |
+| Build Tool | Vite 8 |
+| Styling | Tailwind CSS v4, `@fontsource-variable/geist` |
+| State Management | Redux Toolkit |
+| Server State & Data Fetching | RTK Query (Redux Toolkit Query) |
+| Routing | React Router DOM v7 |
+| UI Components | Base UI (Radix-based), Shadcn primitives, Lucide React icons |
+| Charts | Recharts |
+| Drag & Drop | @dnd-kit/core, @dnd-kit/sortable |
+| Forms & Validation | React Hook Form + Zod + `@hookform/resolvers` |
+| Notifications | Sonner |
 
 ### Backend
-- **Runtime & Language**: Node.js, TypeScript (executed with `tsx`)
-- **Framework**: Express.js
-- **Database & ODM**: MongoDB, Mongoose
-- **Security & Utilities**: Helmet, CORS, Morgan (logger), Cookie-Parser, Dotenv
-- **Auth & Hashing**: JSON Web Tokens (`jsonwebtoken`), `bcryptjs`
-- **Validation**: Zod
 
-### AI Tool
-- **Kiro**
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js 18+ + TypeScript |
+| Framework | Express.js v5 |
+| Database | MongoDB + Mongoose ODM |
+| Authentication | JWT (`jsonwebtoken`) + HTTP-only cookies |
+| Password Hashing | bcryptjs |
+| Validation | Zod |
+| Security | Helmet, CORS, Cookie-Parser |
+| Logging | Morgan |
+| Dev Runner | tsx (TypeScript execution without compilation) |
 
 ---
 
 ## Project Structure
 
-```
+```text
 Trackly/
-├── client/                     # Frontend React + TypeScript application
+├── client/                   # React + TypeScript frontend (Vite)
 │   ├── src/
-│   │   ├── components/         # Reusable UI elements, dialogs, badges, board columns
-│   │   ├── pages/              # Dashboard, Board, Issues, Team, Login, Signup
-│   │   ├── redux/              # Redux store, auth slice, theme slice
-│   │   ├── services/           # Axios/Fetch API service integration layers
-│   │   └── types/              # TypeScript interface & type definitions
-│   ├── package.json
+│   │   ├── components/       # Reusable UI: Button, Dialog, Badge, ErrorBoundary, etc.
+│   │   ├── pages/            # Route views: Dashboard, Board, Issues, Team, Settings, 404
+│   │   ├── layout/           # AppShell, AuthLayout, RootLayout wrappers
+│   │   ├── services/         # RTK Query API slices (auth, issues, team, dashboard)
+│   │   ├── store/            # Redux store + authSlice
+│   │   ├── hooks/            # Custom hooks (useDebounce, useTheme)
+│   │   ├── lib/              # Utilities, API config, analytics helpers
+│   │   ├── types/            # TypeScript interfaces and domain types
+│   │   └── routes.tsx        # React Router DOM route tree
 │   └── vite.config.ts
-├── server/                     # Backend Express + Node.js API
-│   ├── src/
-│   │   ├── config/             # Database connection and environment config
-│   │   ├── controllers/        # Auth, Team, Issue, and Dashboard controllers
-│   │   ├── middlewares/        # Auth verification, RBAC, error handlers, validator
-│   │   ├── models/             # Mongoose schemas (User, Team, Issue)
-│   │   ├── routers/            # Express route declarations
-│   │   ├── schemas/            # Zod validation schemas
-│   │   └── seed.ts             # Database seeding script with demo data
-│   └── package.json
-├── LICENSE                     # License file
-└── README.md                   # Project documentation
+│
+└── server/                   # Express + Node.js REST API
+    └── src/
+        ├── controllers/      # Request handlers (auth, issue, team, dashboard)
+        ├── models/           # Mongoose schemas (User, Team, Issue)
+        ├── routers/          # Express route definitions
+        ├── middlewares/      # JWT auth, RBAC, Zod validation, error handler
+        ├── validators/       # Zod request payload schemas
+        ├── config/           # DB connection, environment variables
+        ├── utils/            # JWT helpers, response formatters
+        └── seed.ts           # Database seeding with demo data
 ```
 
 ---
 
 ## Data Model
 
-- **User**: `name`, `email`, `passwordHash`, `teamId`, `role` (`ADMIN` | `MEMBER`), `createdAt`, `updatedAt`
-- **Team**: `name`, `description`, `createdBy`, `createdAt`, `updatedAt` (Members are linked via `User.teamId`)
-- **Issue**: `title`, `description`, `type` (`BUG` | `FEATURE`), `status` (`TODO` | `IN_PROGRESS` | `DONE`), `priority` (`LOW` | `MEDIUM` | `HIGH` | `CRITICAL`), `createdBy`, `assignedTo`, `teamId`, `comments[]`, `createdAt`, `updatedAt`
+```
+User      → name, email, passwordHash, teamId, role (ADMIN | MEMBER)
+Team      → name, description, createdBy
+Issue     → title, description, type (BUG | FEATURE), status (TODO | IN_PROGRESS | DONE),
+            priority (LOW | MEDIUM | HIGH | CRITICAL), assignedTo, teamId, comments[]
+```
 
 ---
 
-## Setup and Installation
+## Getting Started
 
 ### Prerequisites
 
-- **Node.js** (v18 or higher recommended)
-- **npm** or **pnpm**
-- **MongoDB** (Local instance running at `mongodb://localhost:27017` or a MongoDB Atlas URI)
-- **Git**
+- **Node.js** ≥ 18
+- **pnpm** (recommended) or **npm**
+- **MongoDB** (local or [MongoDB Atlas](https://www.mongodb.com/atlas))
 
-### 1. Clone the repository
+### Installation
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/Himanshu0518/Trackly.git
 cd Trackly
+
+# 2. Install backend dependencies
+cd server && pnpm install
+
+# 3. Install frontend dependencies
+cd ../client && pnpm install
 ```
 
-### 2. Install dependencies
+### Environment Variables
 
-Install backend dependencies:
-```bash
-cd server
-pnpm install # or: npm install
-```
-
-Install frontend dependencies:
-```bash
-cd ../client
-pnpm install # or: npm install
-```
-
-### 3. Configure environment variables
-
-#### Backend Environment Configuration
-Create a `.env` file in the `server/` directory:
+**`server/.env`**
 
 ```env
 PORT=3000
 DATABASE_URI=mongodb://localhost:27017/trackly
-JWT_SECRET=your_super_secret_jwt_key
+JWT_SECRET=your_jwt_secret_here
 NODE_ENV=development
 CLIENT_URL=http://localhost:5173
 ```
 
-#### Frontend Environment Configuration
-Create a `.env.local` file in the `client/` directory:
+**`client/.env.local`**
 
 ```env
 VITE_API_BASE_URL=http://localhost:3000/api
@@ -139,44 +151,41 @@ VITE_API_BASE_URL=http://localhost:3000/api
 
 ---
 
-## How to Run the Application
+## Running the Application
 
-### 1. (Optional) Seed the Database with Demo Data
-To populate sample users, teams, issues, and comments for testing:
-
-```bash
-cd server
-pnpm run seed # or: npm run seed
-```
-
-### 2. Start the Backend API Server
+**1. Start the backend:**
 
 ```bash
 cd server
-pnpm run dev # or: npm run dev
+pnpm run dev
 ```
-*The server will start on `http://localhost:3000`.*
+> API server starts at `http://localhost:3000`
 
-### 3. Start the Frontend Development Server
-
-In a new terminal:
+**2. Start the frontend** (new terminal):
 
 ```bash
 cd client
-pnpm run dev # or: npm run dev
+pnpm run dev
 ```
-*The client application will start at `http://localhost:5173` (or the next available port shown in your terminal).*
+> App opens at `http://localhost:5173`
 
-### 4. Build for Production
+**3. (Optional) Seed the database with demo data:**
 
 ```bash
-# Build backend
 cd server
-pnpm run build # or: npm run build
+pnpm run seed
+```
 
-# Build frontend
-cd ../client
-pnpm run build # or: npm run build
+---
+
+## Building for Production
+
+```bash
+# Backend
+cd server && pnpm run build
+
+# Frontend
+cd client && pnpm run build
 ```
 
 ---
@@ -189,22 +198,22 @@ pnpm run build # or: npm run build
 
 ## AI Development Experience
 
-During the development of Trackly, I used **Kiro** heavily to accelerate development velocity, elevate UI quality, and eliminate repetitive boilerplate. 
+I used **Kiro** throughout development to accelerate the frontend, handle boilerplate, and assist with complex backend logic.
 
-On the frontend, Kiro helped prototype complex interactive components (such as the Kanban board, issue filter bar, and charts) and assisted in adapting components to strict TypeScript and React 19 standards. On the backend, it assisted in structuring MongoDB aggregation pipelines for the analytics dashboard and writing validation schemas. 
+On the frontend, Kiro helped prototype and refine components (Kanban board, filter bars, analytics charts), adapt them to strict TypeScript and React 19 standards, and implement advanced patterns like RTK Query optimistic updates with automatic rollback. On the backend, it helped write MongoDB aggregation pipelines for the dashboard and structure Zod validation schemas.
 
-Working with Kiro allowed me to focus more on high-level architectural decisions, user flow design, and security, while letting AI assist with implementation details, type safety, and boilerplate generation.
+This let me stay focused on product decisions, data architecture, and user experience rather than implementation boilerplate.
 
-### Specific Tasks Where Kiro Was Used
+### Specific Tasks Where Kiro Helped
 
-1. **Frontend Component Development & UI Refinements**: Built and polished complex UI components including the Kanban board columns, responsive modal dialogs, status badges, priority selectors, and Recharts analytics cards.
-2. **Database & Validation Schema Generation**: Generated structured Mongoose schemas and matching Zod validation schemas for `User`, `Team`, and `Issue` entities to ensure end-to-end type safety.
-3. **TypeScript Type-Error Resolution**: Detected and resolved strict TypeScript type issues across the client and server (such as event handler signatures, nullable select states, and compiler configuration fixes).
-4. **Backend Dashboard Aggregation Queries**: Wrote and optimized MongoDB aggregation pipelines to calculate real-time team statistics (issues grouped by status, priority distribution, type ratios, and per-member workload).
-5. **Repetitive Boilerplate & Service Layer Integration**: Generated standard CRUD controller handlers, Express middleware wrappers, and client-side API service modules, reducing redundant manual code writing.
+1. **Frontend component development** — Built and iterated on the Kanban board, issue filter bar, dashboard charts, and modal dialogs.
+2. **RTK Query optimistic updates** — Implemented instant board status changes with automatic rollback if the API call fails.
+3. **Schema & validation generation** — Wrote Mongoose models and matching Zod validators for `User`, `Team`, and `Issue`.
+4. **TypeScript error resolution** — Caught and fixed strict type errors across the client (event handler signatures, null safety, compiler config).
+5. **Dashboard aggregation queries** — Wrote MongoDB `$group`, `$lookup`, and `$project` pipelines for the analytics endpoints.
 
 ---
 
 ## License
 
-This project is licensed under the Apache-2.0 License. See [LICENSE](./LICENSE) for details.
+This project is licensed under the **Apache-2.0 License** — see [LICENSE](./LICENSE) for details.
