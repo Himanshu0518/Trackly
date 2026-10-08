@@ -27,8 +27,8 @@ export default function TeamPage() {
   const user = useAppSelector((s) => s.auth.user);
   const isAdmin = user?.role === "ADMIN";
 
-  const { data: teamData, isLoading: teamLoading } = useGetMyTeamQuery();
-  const { data: membersData, isLoading: membersLoading } = useGetTeamMembersQuery();
+  const { data: teamData, isLoading: teamLoading } = useGetMyTeamQuery(undefined, { skip: !user });
+  const { data: membersData, isLoading: membersLoading } = useGetTeamMembersQuery(undefined, { skip: !user });
   const [addMember, { isLoading: isAdding }] = useAddMemberMutation();
   const [removeMember] = useRemoveMemberMutation();
 

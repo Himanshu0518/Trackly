@@ -3,6 +3,7 @@ import IssueCard from "@/components/issues/IssueCard";
 import NewIssueDialog from "@/components/issues/NewIssueDialog";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
+import { useAppSelector } from "@/store/authSlice";
 import type { IssueData, IssueStatus } from "@/types/user.types";
 
 const COLUMNS: { id: IssueStatus; label: string }[] = [
@@ -12,7 +13,10 @@ const COLUMNS: { id: IssueStatus; label: string }[] = [
 ];
 
 export default function DashboardPage() {
-  const { data, isLoading, isError } = useGetIssuesQuery();
+  const user = useAppSelector((s) => s.auth.user);
+  const { data, isLoading, isError } = useGetIssuesQuery(undefined, {
+    skip: !user,
+  });
 
   const issues = data?.data ?? [];
 

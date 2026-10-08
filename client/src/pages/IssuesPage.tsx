@@ -7,13 +7,15 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { useAppSelector } from "@/store/authSlice";
 import { Plus, Loader2, X } from "lucide-react";
 import type { IssueFilters, IssueStatus, IssueType, IssuePriority } from "@/types/user.types";
 
 export default function IssuesPage() {
   const navigate = useNavigate();
+  const user = useAppSelector((s) => s.auth.user);
   const [filters, setFilters] = useState<IssueFilters>({});
-  const { data, isLoading } = useGetIssuesQuery(filters);
+  const { data, isLoading } = useGetIssuesQuery(filters, { skip: !user });
 
   const issues = data?.data ?? [];
   const hasFilters = Object.values(filters).some(Boolean);

@@ -11,6 +11,7 @@ import { useCreateTeamMutation } from "@/services/team.services";
 import { useCurrentUserQuery } from "@/services/auth.services";
 import { useAppDispatch } from "@/store/authSlice";
 import { setUser } from "@/store/authSlice";
+import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -24,7 +25,7 @@ export default function CreateTeamPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [createTeam, { isLoading }] = useCreateTeamMutation();
-  const { refetch } = useCurrentUserQuery();
+  const { refetch } = useCurrentUserQuery(undefined, { skip: true });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -51,15 +52,18 @@ export default function CreateTeamPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="fixed top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-sm">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-7 h-7 rounded bg-foreground flex items-center justify-center">
-            <span className="text-background text-xs font-bold">T</span>
+        <div className="flex items-center justify-center gap-2.5 mb-8">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
+            <span className="text-primary-foreground text-sm font-bold">T</span>
           </div>
-          <span className="font-semibold text-lg tracking-tight">Trackly</span>
+          <span className="font-semibold text-xl tracking-tight">Trackly</span>
         </div>
-        <Card className="border-border shadow-sm">
-          <CardHeader className="pb-4">
+        <Card className="shadow-sm border-border">
+          <CardHeader className="pb-5">
             <CardTitle className="text-xl font-semibold">Create your team</CardTitle>
             <CardDescription>Set up a workspace for your team to track issues.</CardDescription>
           </CardHeader>
@@ -80,7 +84,7 @@ export default function CreateTeamPage() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
                   {isLoading ? "Creating..." : "Create team"}
                 </Button>
               </form>
