@@ -7,7 +7,7 @@ import NewIssueDialog from "@/components/issues/NewIssueDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger,
 } from "@/components/ui/select";
 import { useAppSelector } from "@/store/authSlice";
 import {
