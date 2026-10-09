@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
-import { useSignUpMutation, useCurrentUserQuery } from "@/services/auth.services";
+import { useSignUpMutation } from "@/services/auth.services";
 import { useAppDispatch, setUser } from "@/store/authSlice";
 import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
