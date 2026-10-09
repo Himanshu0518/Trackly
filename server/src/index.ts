@@ -11,9 +11,21 @@ import router from "./routers/index.js";
 const app = express();
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
+
+// CLIENT_URL may be a single origin or a comma-separated list for multi-env
+// Strip paths/trailing slashes so misconfigured values still work
+const rawOrigins = env.CLIENT_URL.split(",").map((o) => {
+  try {
+    const u = new URL(o.trim());
+    return `${u.protocol}//${u.host}`; // keep only scheme + host
+  } catch {
+    return o.trim();
+  }
+});
+
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin: rawOrigins.length === 1 ? rawOrigins[0] : rawOrigins,
     credentials: true, // required for cookies (accessToken)
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
