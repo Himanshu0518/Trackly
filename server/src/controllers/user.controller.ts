@@ -37,8 +37,6 @@ export const updateMe = asyncHandler(async (req: Request, res: Response) => {
 export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
   const q = (req.query.q as string | undefined)?.trim() ?? "";
 
-  console.log(q);
-
   if (q.length < 2) {
     res.json(new ApiResponse([], "Query too short"));
     return;

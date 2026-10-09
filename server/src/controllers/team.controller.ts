@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Types } from "mongoose";
 import { Team, User } from "@/models/index.js";
 import { asyncHandler } from "@/utils/asyncHandler.js";
 import { createAuthToken } from "@/utils/user-utils.js";
@@ -11,25 +12,23 @@ import {
   AddMemberBody,
 } from "@/validators/team.validator.js";
 
-// ─── POST /api/teams ──────────────────────────────────────────────────────────
-// Creates a new team and promotes the caller to ADMIN
+const toObjectId = (id: string) => new Types.ObjectId(id);
+
+// POST /api/teams
 export const createTeam = asyncHandler(async (req: Request, res: Response) => {
   const { name, description } = req.body as CreateTeamBody;
   const userId = req.user!.userId;
 
-  // A user can only belong to one team
   const caller = await User.findById(userId);
   if (!caller) throw new ApiError("User not found", 404);
   if (caller.teamId) throw new ApiError("You already belong to a team", 409);
 
   const team = await Team.create({ name, description, createdBy: userId });
 
-  // Promote creator to ADMIN and link them to the team
   caller.role = "ADMIN";
   caller.teamId = team._id as unknown as typeof caller.teamId;
   await caller.save();
 
-  // Re-issue token with updated role + teamId
   const token = createAuthToken(userId, "ADMIN", team._id.toString());
 
   res
@@ -38,8 +37,7 @@ export const createTeam = asyncHandler(async (req: Request, res: Response) => {
     .json(new ApiResponse({ team, token }, "Team created successfully", 201));
 });
 
-// ─── GET /api/teams/my ────────────────────────────────────────────────────────
-// Returns the team the caller belongs to
+// GET /api/teams/my
 export const getMyTeam = asyncHandler(async (req: Request, res: Response) => {
   const { teamId } = req.user!;
   if (!teamId) throw new ApiError("You are not part of any team", 404);
@@ -50,8 +48,7 @@ export const getMyTeam = asyncHandler(async (req: Request, res: Response) => {
   res.json(new ApiResponse(team, "Team fetched successfully"));
 });
 
-// ─── GET /api/teams/my/members ────────────────────────────────────────────────
-// Returns all members of the caller's team
+// GET /api/teams/my/members
 export const getTeamMembers = asyncHandler(
   async (req: Request, res: Response) => {
     const { teamId } = req.user!;
@@ -63,8 +60,7 @@ export const getTeamMembers = asyncHandler(
   }
 );
 
-// ─── PATCH /api/teams/my ─────────────────────────────────────────────────────
-// ADMIN only — update team name / description
+// PATCH /api/teams/my  (ADMIN only)
 export const updateTeam = asyncHandler(async (req: Request, res: Response) => {
   const { name, description } = req.body as UpdateTeamBody;
   const { teamId } = req.user!;
@@ -83,18 +79,14 @@ export const updateTeam = asyncHandler(async (req: Request, res: Response) => {
   res.json(new ApiResponse(team, "Team updated successfully"));
 });
 
-// ─── DELETE /api/teams/my ─────────────────────────────────────────────────────
-// ADMIN only — deletes the team and removes all members from it
+// DELETE /api/teams/my  (ADMIN only)
 export const deleteTeam = asyncHandler(async (req: Request, res: Response) => {
   const { teamId, userId } = req.user!;
   if (!teamId) throw new ApiError("You are not part of any team", 404);
 
   await Team.findByIdAndDelete(teamId);
-
-  // Detach every member (including the admin) from the team
   await User.updateMany({ teamId }, { $set: { teamId: null, role: "MEMBER" } });
 
-  // Re-issue token with cleared teamId + reverted role
   const token = createAuthToken(userId, "MEMBER", null);
 
   res
@@ -102,8 +94,7 @@ export const deleteTeam = asyncHandler(async (req: Request, res: Response) => {
     .json(new ApiResponse({ token }, "Team deleted successfully"));
 });
 
-// ─── POST /api/teams/my/members ───────────────────────────────────────────────
-// ADMIN only — add a user to the team
+// POST /api/teams/my/members  (ADMIN only)
 export const addMember = asyncHandler(async (req: Request, res: Response) => {
   const { userId: targetUserId } = req.body as AddMemberBody;
   const { teamId } = req.user!;
@@ -113,24 +104,18 @@ export const addMember = asyncHandler(async (req: Request, res: Response) => {
   if (!target) throw new ApiError("User not found", 404);
   if (target.teamId) throw new ApiError("User already belongs to a team", 409);
 
-  target.teamId = team_id_from_string(teamId);
+  target.teamId = toObjectId(teamId) as unknown as typeof target.teamId;
   await target.save();
 
   res.json(
     new ApiResponse(
-      {
-        id: target._id,
-        name: target.name,
-        email: target.email,
-        role: target.role,
-      },
+      { id: target._id, name: target.name, email: target.email, role: target.role },
       "Member added successfully"
     )
   );
 });
 
-// ─── DELETE /api/teams/my/members/:memberId ───────────────────────────────────
-// ADMIN only — remove a member from the team
+// DELETE /api/teams/my/members/:memberId  (ADMIN only)
 export const removeMember = asyncHandler(
   async (req: Request, res: Response) => {
     const { memberId } = req.params;
@@ -154,7 +139,3 @@ export const removeMember = asyncHandler(
     res.json(new ApiResponse(null, "Member removed successfully"));
   }
 );
-
-// helper — avoids importing mongoose Types directly in the controller
-import { Types } from "mongoose";
-const team_id_from_string = (id: string) => new Types.ObjectId(id);
