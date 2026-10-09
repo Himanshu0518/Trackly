@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
-import { useLoginMutation, useCurrentUserQuery } from "@/services/auth.services";
+import { useLoginMutation, userApi } from "@/services/auth.services";
 import { useAppDispatch, setUser } from "@/store/authSlice";
 import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
@@ -36,7 +36,6 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [login, { isLoading }] = useLoginMutation();
-  const { refetch } = useCurrentUserQuery(undefined, { skip: true });
 
   // null = picker hidden, "picking" = show role buttons, "loading" = autologging in
   const [testState, setTestState] = useState<"idle" | "picking" | "loading">("idle");
@@ -50,10 +49,13 @@ export default function LoginPage() {
   /** Shared login logic used by both manual form and test-account flow */
   const doLogin = async (email: string, password: string) => {
     await login({ email, password }).unwrap();
-    const me = await refetch();
-    if (me.data?.data) {
-      dispatch(setUser(me.data.data));
-      navigate(me.data.data.teamId ? "/dashboard" : "/onboarding/create-team", {
+    const result = await dispatch(
+      userApi.endpoints.currentUser.initiate(undefined, { forceRefetch: true })
+    );
+    const me = result.data;
+    if (me?.data) {
+      dispatch(setUser(me.data));
+      navigate(me.data.teamId ? "/dashboard" : "/onboarding/create-team", {
         replace: true,
       });
     }
@@ -78,6 +80,7 @@ export default function LoginPage() {
       const { email, password } = TEST_ACCOUNTS[role];
       await doLogin(email, password);
     } catch (err: unknown) {
+      console.log(err)
       const message =
         typeof err === "object" && err !== null && "data" in err
           ? (err as { data?: { message?: string } }).data?.message

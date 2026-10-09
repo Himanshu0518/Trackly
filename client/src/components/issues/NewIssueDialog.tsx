@@ -17,6 +17,7 @@ import {
 import { useCreateIssueMutation } from "@/services/issue.services";
 import { useGetTeamMembersQuery } from "@/services/team.services";
 import { toast } from "sonner";
+import { CalendarIcon, X } from "lucide-react";
 import type { IssueType, IssuePriority } from "@/types/user.types";
 
 const schema = z.object({
@@ -25,6 +26,7 @@ const schema = z.object({
   type: z.enum(["BUG", "FEATURE"] as const),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const),
   assignedTo: z.string().optional(),
+  dueDate: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -40,7 +42,7 @@ export default function NewIssueDialog({ children }: NewIssueDialogProps) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { title: "", description: "", assignedTo: undefined },
+    defaultValues: { title: "", description: "", assignedTo: undefined, dueDate: "" },
   });
 
   const onSubmit = async (values: FormValues) => {
@@ -51,6 +53,8 @@ export default function NewIssueDialog({ children }: NewIssueDialogProps) {
         type: values.type as IssueType,
         priority: values.priority as IssuePriority,
         assignedTo: values.assignedTo || undefined,
+        // Convert local date string → ISO 8601 for the server validator
+        dueDate: values.dueDate ? new Date(values.dueDate).toISOString() : null,
       }).unwrap();
       toast.success("Issue created");
       form.reset();
@@ -141,30 +145,63 @@ export default function NewIssueDialog({ children }: NewIssueDialogProps) {
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="assignedTo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Assign to</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Unassigned" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {membersData?.data?.map((m) => (
-                        <SelectItem key={m._id} value={m._id}>
-                          {m.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="assignedTo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assign to</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Unassigned" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {membersData?.data?.map((m) => (
+                          <SelectItem key={m._id} value={m._id}>
+                            {m.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="dueDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Due date</FormLabel>
+                    <div className="relative">
+                      <CalendarIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                      <FormControl>
+                        <Input
+                          type="date"
+                          className="pl-8 pr-8"
+                          min={new Date().toISOString().split("T")[0]}
+                          {...field}
+                        />
+                      </FormControl>
+                      {field.value && (
+                        <button
+                          type="button"
+                          onClick={() => field.onChange("")}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          aria-label="Clear due date"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel

@@ -5,12 +5,13 @@ import { useGetTeamMembersQuery } from "@/services/team.services";
 import { useAppSelector } from "@/store/authSlice";
 import { StatusBadge, PriorityBadge, TypeBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, ArrowLeft, Trash2 } from "lucide-react";
+import { Loader2, ArrowLeft, Trash2, CalendarIcon, X, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import type { IssueStatus, IssuePriority, IssueType } from "@/types/user.types";
 
@@ -50,7 +51,7 @@ export default function IssueDetailPage() {
   const isAdmin = user?.role === "ADMIN";
   const canReassign = isCreator || isAdmin;
 
-  const handleUpdate = async (patch: Partial<{ title: string; description: string; type: IssueType; status: IssueStatus; priority: IssuePriority; assignedTo: string | null }>) => {
+  const handleUpdate = async (patch: Partial<{ title: string; description: string; type: IssueType; status: IssueStatus; priority: IssuePriority; assignedTo: string | null; dueDate: string | null }>) => {
     try {
       await updateIssue({ id: issue._id, ...patch }).unwrap();
       toast.success("Updated");
@@ -98,6 +99,17 @@ export default function IssueDetailPage() {
             <TypeBadge type={issue.type} />
             <StatusBadge status={issue.status} />
             <PriorityBadge priority={issue.priority} />
+            {issue.dueDate && (
+              <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-medium ${
+                issue.status !== "DONE" && new Date(issue.dueDate) < new Date()
+                  ? "bg-red-500/10 border-red-500/30 text-red-500"
+                  : "bg-muted border-border text-muted-foreground"
+              }`}>
+                <CalendarIcon className="h-3 w-3" />
+                {new Date(issue.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                {issue.status !== "DONE" && new Date(issue.dueDate) < new Date() && " · Overdue"}
+              </span>
+            )}
           </div>
 
           {issue.description && (
@@ -202,6 +214,54 @@ export default function IssueDetailPage() {
                 </Select>
               </div>
             )}
+
+            {/* Due date */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-1.5">Due date</p>
+              {(() => {
+                const isOverdue =
+                  issue.status !== "DONE" &&
+                  issue.dueDate &&
+                  new Date(issue.dueDate) < new Date();
+                const currentValue = issue.dueDate
+                  ? new Date(issue.dueDate).toISOString().split("T")[0]
+                  : "";
+                return (
+                  <div className="space-y-1">
+                    <div className="relative">
+                      <CalendarIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                      <Input
+                        type="date"
+                        className={`h-8 text-xs pl-7 pr-7 ${isOverdue ? "border-red-500/60 text-red-500 focus-visible:ring-red-500/30" : ""}`}
+                        value={currentValue}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          handleUpdate({
+                            dueDate: v ? new Date(v).toISOString() : null,
+                          });
+                        }}
+                      />
+                      {currentValue && (
+                        <button
+                          type="button"
+                          onClick={() => handleUpdate({ dueDate: null })}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          aria-label="Clear due date"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                    {isOverdue && (
+                      <p className="flex items-center gap-1 text-[11px] text-red-500 font-medium">
+                        <AlertTriangle className="h-3 w-3" />
+                        Overdue
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
           </div>
 
           {(isCreator || isAdmin) && (

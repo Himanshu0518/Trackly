@@ -35,6 +35,7 @@ export interface IIssue {
   type: IssueType;
   status: IssueStatus;
   priority: IssuePriority;
+  dueDate?: string | null;
   createdBy: string;
   assignedTo: string | null;
   teamId: string;
@@ -142,6 +143,7 @@ export interface CreateIssuePayload {
   type: IssueType;
   priority: IssuePriority;
   assignedTo?: string;
+  dueDate?: string | null;
 }
 
 export interface UpdateIssuePayload {
@@ -152,6 +154,7 @@ export interface UpdateIssuePayload {
   status?: IssueStatus;
   priority?: IssuePriority;
   assignedTo?: string | null;
+  dueDate?: string | null;
 }
 
 export interface IssueFilters {
@@ -183,6 +186,7 @@ export interface DashboardStats {
   inProgress: number;
   open: number;
   done: number;
+  overdue: number;
   completionRate: number;
   openByPriority: Record<IssuePriority, number>;
   byType: Record<IssueType, { open: number; done: number }>;
@@ -215,6 +219,7 @@ export interface IssueData {
   type: IssueType;
   status: IssueStatus;
   priority: IssuePriority;
+  dueDate?: string | null;
   createdBy: PopulatedUser;
   assignedTo: PopulatedUser | null;
   teamId: string;

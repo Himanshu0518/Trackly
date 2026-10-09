@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { PriorityBadge, TypeBadge } from "@/components/ui/status-badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { CalendarIcon } from "lucide-react";
 import type { IssueData } from "@/types/user.types";
 import { cn } from "@/lib/utils";
 
@@ -15,12 +16,18 @@ function getInitials(name: string): string {
 export default function IssueCard({ issue }: IssueCardProps) {
   const navigate = useNavigate();
 
+  const isOverdue =
+    issue.status !== "DONE" &&
+    issue.dueDate &&
+    new Date(issue.dueDate) < new Date();
+
   return (
     <div
       onClick={() => navigate(`/issues/${issue._id}`)}
       className={cn(
         "group bg-card border border-border rounded-md p-3 cursor-pointer",
-        "hover:border-zinc-300 hover:shadow-sm transition-all duration-150"
+        "hover:border-zinc-300 hover:shadow-sm transition-all duration-150",
+        isOverdue && "border-red-500/40 bg-red-500/[0.03]"
       )}
     >
       <p className="text-sm font-medium text-foreground line-clamp-2 mb-2.5 group-hover:text-foreground/80">
@@ -30,16 +37,29 @@ export default function IssueCard({ issue }: IssueCardProps) {
         <TypeBadge type={issue.type} />
         <PriorityBadge priority={issue.priority} />
       </div>
-      {issue.assignedTo && (
-        <div className="mt-2.5 flex items-center gap-1.5">
-          <Avatar className="h-5 w-5">
-            <AvatarFallback className="text-[10px] bg-muted">
-              {getInitials(issue.assignedTo.name)}
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-xs text-muted-foreground">{issue.assignedTo.name}</span>
-        </div>
-      )}
+      <div className="mt-2.5 flex items-center justify-between gap-2">
+        {issue.assignedTo ? (
+          <div className="flex items-center gap-1.5">
+            <Avatar className="h-5 w-5">
+              <AvatarFallback className="text-[10px] bg-muted">
+                {getInitials(issue.assignedTo.name)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-xs text-muted-foreground">{issue.assignedTo.name}</span>
+          </div>
+        ) : (
+          <span />
+        )}
+        {issue.dueDate && (
+          <span className={cn(
+            "flex items-center gap-1 text-[11px] font-medium shrink-0",
+            isOverdue ? "text-red-500" : "text-muted-foreground"
+          )}>
+            <CalendarIcon className="h-3 w-3" />
+            {new Date(issue.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

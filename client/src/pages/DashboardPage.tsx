@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import {
   CheckCircle2, CircleDot, AlertCircle, ListChecks,
-  TrendingUp, Users, Zap, Activity,
+  TrendingUp, Users, Zap, Activity, Clock,
 } from "lucide-react";
 import { StatusBadge, PriorityBadge, TypeBadge } from "@/components/ui/status-badge";
 import { useNavigate } from "react-router-dom";
@@ -187,6 +187,17 @@ export default function DashboardPage() {
           accent="red"
         />
       </div>
+
+      {/* ── Overdue banner (only shown when there are overdue issues) ── */}
+      {(stats.overdue ?? 0) > 0 && (
+        <div className="flex items-center gap-3 rounded-xl border border-red-500/30 bg-red-500/5 px-5 py-3">
+          <Clock className="h-4 w-4 text-red-500 shrink-0" />
+          <p className="text-sm text-red-600 dark:text-red-400">
+            <span className="font-semibold">{stats.overdue}</span>{" "}
+            {stats.overdue === 1 ? "issue is" : "issues are"} past their due date
+          </p>
+        </div>
+      )}
 
       {/* ── Row 2: Trend + Distribution ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
