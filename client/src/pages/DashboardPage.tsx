@@ -152,7 +152,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Analytics</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Real-time server analytics and metrics overview
+          Real-time analytics and metrics overview
         </p>
       </div>
 
