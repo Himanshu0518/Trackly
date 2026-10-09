@@ -14,16 +14,11 @@ import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { connectDB } from "./config/db.js";
 
-// Load .env relative to this file
+// Load .env relative to this file (must happen before connectDB reads env)
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "../.env") });
-
-const DATABASE_URI = process.env.DATABASE_URI ?? "";
-if (!DATABASE_URI) {
-  console.error("❌  DATABASE_URI is not set in .env");
-  process.exit(1);
-}
 
 // ─── Inline model definitions (avoids ESM alias issues in the script) ─────────
 
@@ -117,7 +112,7 @@ const PASSWORD_ADMIN = "Admin123!";
 const PASSWORD_MEMBER = "Member123!";
 
 async function main() {
-  await mongoose.connect(DATABASE_URI);
+  await connectDB();
   console.log("✅  Connected to MongoDB");
 
   // ── Clean up previous seed (idempotent) ──────────────────────────────────
