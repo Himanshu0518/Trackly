@@ -1,6 +1,6 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, ListTodo, Users, Settings, LogOut, ChevronRight, LayoutGrid,
+  LayoutDashboard, ListTodo, Users, Settings, LogOut, ChevronRight, LayoutGrid, UserCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,8 @@ export default function AppShell() {
   };
 
   const currentPage =
-    navItems.find((n) => location.pathname.startsWith(n.href))?.label ?? "Dashboard";
+    navItems.find((n) => location.pathname.startsWith(n.href))?.label ??
+    (location.pathname === "/profile" ? "Profile" : "Dashboard");
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -97,21 +98,47 @@ export default function AppShell() {
 
         {/* User footer */}
         <div className="p-3 space-y-1">
-          <div className="flex items-center gap-2.5 px-2 py-2 rounded-md">
-            <Avatar className="h-7 w-7">
-              <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
+          <button
+            onClick={() => navigate("/profile")}
+            className={cn(
+              "w-full flex items-center gap-2.5 px-2 py-2 rounded-md transition-colors group",
+              location.pathname === "/profile"
+                ? "bg-primary/10"
+                : "hover:bg-sidebar-accent"
+            )}
+          >
+            <Avatar className="h-7 w-7 shrink-0">
+              <AvatarFallback
+                className={cn(
+                  "text-[10px] font-semibold",
+                  location.pathname === "/profile"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-primary/10 text-primary"
+                )}
+              >
                 {user ? getInitials(user.name) : "?"}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate text-sidebar-foreground">
+            <div className="flex-1 min-w-0 text-left">
+              <p className={cn(
+                "text-xs font-medium truncate",
+                location.pathname === "/profile"
+                  ? "text-primary"
+                  : "text-sidebar-foreground"
+              )}>
                 {user?.name ?? "—"}
               </p>
               <p className="text-[11px] text-sidebar-foreground/50 truncate">
                 {user?.role ?? ""}
               </p>
             </div>
-          </div>
+            <UserCircle2 className={cn(
+              "h-3.5 w-3.5 shrink-0 transition-colors",
+              location.pathname === "/profile"
+                ? "text-primary"
+                : "text-sidebar-foreground/30 group-hover:text-sidebar-foreground/60"
+            )} />
+          </button>
           <Button
             variant="ghost"
             size="sm"

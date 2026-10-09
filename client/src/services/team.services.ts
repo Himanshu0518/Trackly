@@ -56,6 +56,10 @@ export const teamApi = createApi({
         }
       },
     }),
+    exitTeam: builder.mutation<{ data: { token: string } }, void>({
+      query: () => ({ url: "/teams/my/exit", method: "POST" }),
+      invalidatesTags: ["Team", "Member"],
+    }),
   }),
 });
 
@@ -67,4 +71,5 @@ export const {
   useDeleteTeamMutation,
   useAddMemberMutation,
   useRemoveMemberMutation,
+  useExitTeamMutation,
 } = teamApi;

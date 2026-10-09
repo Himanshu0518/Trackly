@@ -5,18 +5,11 @@ import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/store/authSlice";
 
 interface AuthLayoutProps {
-  /** true  → route requires a logged-in user */
   authentication?: boolean;
-  /** true  → route requires ADMIN role */
   requireAdmin?: boolean;
-  /** true  → route is for users who have NO team yet (onboarding) */
   requireNoTeam?: boolean;
 }
 
-/**
- * AuthLayout — reads auth state from Redux only.
- * RootLayout already fired /users/me on boot; no duplicate call here.
- */
 export default function AuthLayout({
   authentication = true,
   requireAdmin = false,
@@ -28,34 +21,39 @@ export default function AuthLayout({
   const user = useAppSelector((state) => state.auth.user);
   const isInitialized = useAppSelector((state) => state.auth.isInitialized);
 
+  // Onboarding paths that are valid for teamless users
+  const onOnboarding =
+    location.pathname.startsWith("/onboarding/create-team") ||
+    location.pathname.startsWith("/onboarding/waiting");
+
   useEffect(() => {
     if (!isInitialized) return;
 
-    // Needs auth but no session → send to login
+    // Needs auth but no session → login
     if (authentication && !user) {
       navigate("/login", { state: { from: location }, replace: true });
       return;
     }
 
-    // Doesn't need auth (login/signup) but already logged in → go to app
+    // Auth not required (login/signup) but already logged in → app
     if (!authentication && user) {
       navigate("/dashboard", { replace: true });
       return;
     }
 
-    // Needs auth + a team, but user has no team → onboarding
+    // Authenticated, no team, trying to reach a protected app route →
+    // send to create-team (user can skip from there to waiting)
     if (authentication && user && !user.teamId && !requireNoTeam) {
       navigate("/onboarding/create-team", { replace: true });
       return;
     }
 
-    // Onboarding route but user already has a team → go to app
+    // Onboarding routes but user already has a team → go to app
     if (requireNoTeam && user?.teamId) {
       navigate("/dashboard", { replace: true });
     }
-  }, [user, isInitialized, authentication, requireNoTeam, navigate, location]);
+  }, [user, isInitialized, authentication, requireNoTeam, navigate, location, onOnboarding]);
 
-  // Still waiting for the boot-time auth check
   if (!isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -64,7 +62,6 @@ export default function AuthLayout({
     );
   }
 
-  // Admin-only page but user isn't admin
   if (requireAdmin && user?.role !== "ADMIN") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">

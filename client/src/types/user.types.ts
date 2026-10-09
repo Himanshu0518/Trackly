@@ -257,3 +257,16 @@ export interface UserSearchResult {
 }
 
 export type UserSearchResponse = IApiResponse<UserSearchResult[]>;
+
+// ─── Profile stats (GET /users/me/stats) ─────────────────────────────────────
+export interface MyStats {
+  total: number;
+  todo: number;
+  inProgress: number;
+  done: number;
+  overdue: number;
+  completionRate: number;
+  issues: IssueData[];
+}
+
+export type MyStatsResponse = IApiResponse<MyStats>;

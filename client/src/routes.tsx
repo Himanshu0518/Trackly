@@ -7,6 +7,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import LoginPage from "@/pages/auth/LoginPage";
 import SignupPage from "@/pages/auth/SignupPage";
 import CreateTeamPage from "@/pages/onboarding/CreateTeamPage";
+import WaitingPage from "@/pages/onboarding/WaitingPage";
 import DashboardPage from "@/pages/DashboardPage";
 import BoardPage from "@/pages/BoardPage";
 import IssuesPage from "@/pages/IssuesPage";
@@ -15,6 +16,7 @@ import TeamPage from "@/pages/TeamPage";
 import SettingsPage from "@/pages/SettingsPage";
 
 import NotFoundPage from "@/pages/NotFoundPage";
+import ProfilePage from "@/pages/ProfilePage";
 
 const router = createBrowserRouter([
   {
@@ -41,6 +43,7 @@ const router = createBrowserRouter([
         element: <AuthLayout authentication={true} requireNoTeam={true} />,
         children: [
           { path: "onboarding/create-team", element: <CreateTeamPage /> },
+          { path: "onboarding/waiting",     element: <WaitingPage /> },
         ],
       },
 
@@ -57,6 +60,7 @@ const router = createBrowserRouter([
               { path: "issues/:id", element: <IssueDetailPage /> },
               { path: "team", element: <TeamPage /> },
               { path: "settings", element: <SettingsPage /> },
+              { path: "profile", element: <ProfilePage /> },
             ],
           },
         ],

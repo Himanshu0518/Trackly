@@ -10,13 +10,9 @@ import type {
   AllUserResponse,
   UpdateMePayload,
   UserSearchResponse,
+  MyStatsResponse,
 } from "@/types/user.types";
 
-/**
- * The login / signup response already contains the user, so the app never needs
- * a second GET /users/me after authenticating. /users/me is only used once per
- * page load (see RootLayout) to restore the session from the httpOnly cookie.
- */
 export function userFromAuth(u: AuthUserData["user"]): MeUserData {
   return { _id: u.id, name: u.name, email: u.email, role: u.role, teamId: u.teamId };
 }
@@ -41,6 +37,7 @@ export const userApi = createApi({
     }),
     updateMe: builder.mutation<MeResponse, UpdateMePayload>({
       query: (body) => ({ url: "/users/me", method: "PATCH", body }),
+      invalidatesTags: ["User"],
     }),
     getAllUsers: builder.query<AllUserResponse, void>({
       query: () => "/users",
@@ -48,7 +45,10 @@ export const userApi = createApi({
     }),
     searchUsers: builder.query<UserSearchResponse, string>({
       query: (q) => `/users/search?q=${encodeURIComponent(q)}`,
-      // No cache tag needed — results are ephemeral search results
+    }),
+    getMyStats: builder.query<MyStatsResponse, void>({
+      query: () => "/users/me/stats",
+      providesTags: ["User"],
     }),
   }),
 });
@@ -60,4 +60,5 @@ export const {
   useUpdateMeMutation,
   useGetAllUsersQuery,
   useSearchUsersQuery,
+  useGetMyStatsQuery,
 } = userApi;
