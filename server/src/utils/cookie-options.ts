@@ -1,13 +1,10 @@
 import { CookieOptions } from "express";
 import env from "@/config/env.js";
 
-const isProd = env.NODE_ENV === "production";
-
 export const accessTokenCookieOptions: CookieOptions = {
   httpOnly: true,
-  secure: isProd,          // HTTPS only in prod — required when sameSite is "none"
-  sameSite: isProd
-    ? "none"               // cross-origin (Vercel → Render) needs "none" + secure
-    : "lax",               // local dev: lax is fine, same-host
+  secure: env.NODE_ENV === "production", // HTTPS in prod, HTTP ok locally
+  sameSite: "lax",   // Same-origin via Vercel proxy — Lax works everywhere,
+                     // incognito included. "none" was only needed cross-origin.
   maxAge: 24 * 60 * 60 * 1000, // 1 day in ms
 };
