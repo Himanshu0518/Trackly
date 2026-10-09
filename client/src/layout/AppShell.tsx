@@ -11,6 +11,7 @@ import { useLogOutMutation } from "@/services/auth.services";
 import { clearUser } from "@/store/authSlice";
 import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
+import { tokenStore } from "@/lib/token-store";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -39,6 +40,7 @@ export default function AppShell() {
   const handleLogout = async () => {
     try {
       await logOut().unwrap();
+      tokenStore.clear(); // remove the Bearer token so no stale header is sent
       dispatch(clearUser());
       navigate("/login");
     } catch {

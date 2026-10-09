@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { useLoginMutation, userFromAuth } from "@/services/auth.services";
+import { tokenStore } from "@/lib/token-store";
 import { resetSessionCaches } from "@/lib/session";
 import { useAppDispatch, setUser } from "@/store/authSlice";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -50,8 +51,10 @@ export default function LoginPage() {
   /** Shared login logic used by both manual form and test-account flow */
   const doLogin = async (email: string, password: string) => {
     const res = await login({ email, password }).unwrap();
-    // Use the user data already returned by the login response —
-    // no need for a second /users/me round-trip that races with RootLayout.
+    // Persist the raw JWT so the base-query can send it as Authorization: Bearer.
+    // This is the only auth mechanism that works in incognito / strict-privacy
+    // mode where cross-origin SameSite=None cookies are blocked by the browser.
+    tokenStore.set(res.data.token);
     const me = userFromAuth(res.data.user);
     resetSessionCaches(dispatch); // never show a previous user's cached issues/team
     dispatch(setUser(me));

@@ -6,10 +6,22 @@ import {
 } from "@reduxjs/toolkit/query/react";
 import { API_BASE_URL } from "@/lib/api-config";
 import { clearUser } from "@/store/authSlice";
+import { tokenStore } from "@/lib/token-store";
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
   credentials: "include",
+  // Attach the stored JWT as a Bearer token on every request.
+  // In normal browsers the httpOnly cookie is enough; in incognito /
+  // strict-privacy mode cross-origin SameSite=None cookies are blocked, so
+  // this header is the only thing keeping the session alive.
+  prepareHeaders: (headers) => {
+    const token = tokenStore.get();
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    return headers;
+  },
 });
 
 // Endpoints where a 401 just means "wrong credentials", not "session expired"

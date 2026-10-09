@@ -16,6 +16,7 @@ import { resetSessionCaches } from "@/lib/session";
 import { useAppDispatch, setUser } from "@/store/authSlice";
 import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
+import { tokenStore } from "@/lib/token-store";
 
 const schema = z
   .object({
@@ -49,6 +50,10 @@ export default function SignupPage() {
         password: values.password,
       }).unwrap();
 
+      // Persist the raw JWT so the base-query can send it as Authorization: Bearer.
+      // This is the only auth mechanism that works in incognito / strict-privacy
+      // mode where cross-origin SameSite=None cookies are blocked by the browser.
+      tokenStore.set(res.data.token);
       // Use the user data from the signup response directly —
       // no /users/me refetch needed, avoids the cross-origin cookie race
       resetSessionCaches(dispatch); // never show a previous user's cached data
