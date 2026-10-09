@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { User } from "@/models/index.js";
+import { User, Issue } from "@/models/index.js";
 import { asyncHandler } from "@/utils/asyncHandler.js";
 import ApiError from "@/utils/api-error.js";
 import ApiResponse from "@/utils/api-response.js";
@@ -52,4 +52,57 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
     .limit(10);
 
   res.json(new ApiResponse(users, "Users fetched successfully"));
+});
+
+// GET /api/users/me/stats
+export const getMyStats = asyncHandler(async (req: Request, res: Response) => {
+  const { userId, teamId } = req.user!;
+
+  if (!teamId) {
+    throw new ApiError("You are not part of any team", 403);
+  }
+
+  // Scope strictly to the user's current team — excludes issues from past teams
+  const assigned = await Issue.find({ assignedTo: userId, teamId })
+    .populate("createdBy", "name email")
+    .sort({ updatedAt: -1 })
+    .lean();
+
+  const now = new Date();
+  let todo = 0;
+  let inProgress = 0;
+  let done = 0;
+  let overdue = 0;
+
+  for (const issue of assigned) {
+    if (issue.status === "TODO") todo++;
+    else if (issue.status === "IN_PROGRESS") inProgress++;
+    else done++;
+
+    if (
+      issue.status !== "DONE" &&
+      issue.dueDate &&
+      new Date(issue.dueDate) < now
+    ) {
+      overdue++;
+    }
+  }
+
+  const total = assigned.length;
+  const completionRate = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  res.json(
+    new ApiResponse(
+      {
+        total,
+        todo,
+        inProgress,
+        done,
+        overdue,
+        completionRate,
+        issues: assigned,
+      },
+      "Profile stats fetched successfully"
+    )
+  );
 });

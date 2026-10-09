@@ -7,6 +7,7 @@ import {
   deleteTeam,
   addMember,
   removeMember,
+  exitTeam,
 } from "@/controllers/team.controller.js";
 import { verifyJWT } from "@/middlewares/auth.middleware.js";
 import { verifyAdmin } from "@/middlewares/verifyAdmin.middleware.js";
@@ -27,6 +28,7 @@ router.use(verifyJWT);
 router.post("/", validate(createTeamSchema), createTeam);
 router.get("/my", getMyTeam);
 router.get("/my/members", getTeamMembers);
+router.post("/my/exit", exitTeam);
 
 // ADMIN only
 router.patch("/my", verifyAdmin, validate(updateTeamSchema), updateTeam);

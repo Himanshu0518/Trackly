@@ -139,3 +139,30 @@ export const removeMember = asyncHandler(
     res.json(new ApiResponse(null, "Member removed successfully"));
   }
 );
+
+// POST /api/teams/my/exit  (MEMBER only — admin must delete the team instead)
+export const exitTeam = asyncHandler(async (req: Request, res: Response) => {
+  const { userId, teamId, role } = req.user!;
+  if (!teamId) throw new ApiError("You are not part of any team", 400);
+
+  if (role === "ADMIN") {
+    throw new ApiError(
+      "Admins cannot leave — transfer ownership or delete the team first",
+      403
+    );
+  }
+
+  const user = await User.findById(userId);
+  if (!user) throw new ApiError("User not found", 404);
+
+  user.teamId = null;
+  user.role = "MEMBER";
+  await user.save();
+
+  // Re-issue token with cleared teamId so the client reflects the change immediately
+  const token = createAuthToken(userId, "MEMBER", null);
+
+  res
+    .cookie("accessToken", token, accessTokenCookieOptions)
+    .json(new ApiResponse({ token }, "You have left the team"));
+});
