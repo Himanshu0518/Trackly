@@ -15,6 +15,7 @@ import { useSignUpMutation } from "@/services/auth.services";
 import { useAppDispatch, setUser } from "@/store/authSlice";
 import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
+import type { MeUserData } from "@/types/user.types";
 
 const schema = z
   .object({
@@ -34,8 +35,6 @@ export default function SignupPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [signUp, { isLoading }] = useSignUpMutation();
-  // skip=true — only refetch after successful signup
-  const { refetch } = useCurrentUserQuery(undefined, { skip: true });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -44,16 +43,25 @@ export default function SignupPage() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await signUp({
+      const res = await signUp({
         name: values.name,
         email: values.email,
         password: values.password,
       }).unwrap();
-      // Hydrate the store with fresh user data
-      const me = await refetch();
-      if (me.data?.data) {
-        dispatch(setUser(me.data.data));
-      }
+
+      // Use the user data from the signup response directly —
+      // no /users/me refetch needed, avoids the cross-origin cookie race
+      const { user } = res.data;
+      const meData: MeUserData = {
+        _id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        teamId: user.teamId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      dispatch(setUser(meData));
       navigate("/onboarding/create-team", { replace: true });
     } catch (err: unknown) {
       const message =

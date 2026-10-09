@@ -1,33 +1,39 @@
 import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { useCurrentUserQuery } from "@/services/auth.services";
-import { setUser, clearUser, setInitialized, useAppSelector, useAppDispatch } from "@/store/authSlice";
+import {
+  setUser,
+  clearUser,
+  setInitialized,
+  useAppSelector,
+  useAppDispatch,
+} from "@/store/authSlice";
 import { Loader2 } from "lucide-react";
 
 /**
- * RootLayout — sits at the very top of the router tree.
- * It fires ONE /users/me request on app boot to hydrate
- * the Redux auth state, then renders all children.
+ * RootLayout — fires ONE /users/me on cold boot to hydrate Redux.
  *
- * Once the user logs out (user === null, isInitialized === true),
- * the query is skipped entirely — no further 401 calls are made.
- * AuthLayout (below this) reads from Redux only — no duplicate requests.
+ * Skip conditions (no network call made):
+ *   1. Already initialized AND no user  → post-logout or first 401 already handled
+ *   2. Already initialized AND has user → login/signup already set the store;
+ *      no need to re-fetch and risk a race overwriting the fresh state
  */
 export default function RootLayout() {
   const dispatch = useAppDispatch();
   const isInitialized = useAppSelector((s) => s.auth.isInitialized);
-  const user = useAppSelector((s) => s.auth.user);
+  // const user = useAppSelector((s) => s.auth.user);
 
-  // Skip the query if we already know there's no session (post-logout or after first 401).
-  // This prevents the spurious /users/me 401 calls after logout.
-  const shouldSkip = isInitialized && !user;
+  // Skip whenever auth state is already known — covers both post-login and post-logout
+  const shouldSkip = isInitialized;
 
-  const { data, isLoading, isError, isFetching } = useCurrentUserQuery(undefined, {
-    skip: shouldSkip,
-    // Don't refetch on window focus — the cookie is stable until logout
-    refetchOnFocus: false,
-    refetchOnReconnect: false,
-  });
+  const { data, isLoading, isError, isFetching } = useCurrentUserQuery(
+    undefined,
+    {
+      skip: shouldSkip,
+      refetchOnFocus: false,
+      refetchOnReconnect: false,
+    }
+  );
 
   useEffect(() => {
     if (isLoading || isFetching) return;
@@ -35,20 +41,19 @@ export default function RootLayout() {
     if (data?.data) {
       dispatch(setUser(data.data));
     } else if (isError) {
-      // 401 = no active session; mark initialized so auth guards can redirect
       dispatch(clearUser());
     }
   }, [data, isError, isLoading, isFetching, dispatch]);
 
-  // Mark initialized when query is skipped (post-logout state)
+  // Mark initialized immediately when the query is skipped
   useEffect(() => {
     if (shouldSkip && !isInitialized) {
       dispatch(setInitialized());
     }
   }, [shouldSkip, isInitialized, dispatch]);
 
-  // Block rendering until we know the auth state
-  if (isLoading || isFetching) {
+  // Only block render on the cold-boot fetch (shouldSkip === false)
+  if (!shouldSkip && (isLoading || isFetching)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
