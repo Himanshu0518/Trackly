@@ -11,11 +11,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
-import { useSignUpMutation } from "@/services/auth.services";
+import { useSignUpMutation, userFromAuth } from "@/services/auth.services";
+import { resetSessionCaches } from "@/lib/session";
 import { useAppDispatch, setUser } from "@/store/authSlice";
 import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
-import type { MeUserData } from "@/types/user.types";
 
 const schema = z
   .object({
@@ -51,17 +51,8 @@ export default function SignupPage() {
 
       // Use the user data from the signup response directly —
       // no /users/me refetch needed, avoids the cross-origin cookie race
-      const { user } = res.data;
-      const meData: MeUserData = {
-        _id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        teamId: user.teamId,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      dispatch(setUser(meData));
+      resetSessionCaches(dispatch); // never show a previous user's cached data
+      dispatch(setUser(userFromAuth(res.data.user)));
       navigate("/onboarding/create-team", { replace: true });
     } catch (err: unknown) {
       const message =

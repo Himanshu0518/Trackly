@@ -8,8 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useCreateTeamMutation } from "@/services/team.services";
-import { useCurrentUserQuery } from "@/services/auth.services";
-import { useAppDispatch } from "@/store/authSlice";
+import { useAppDispatch, useAppSelector } from "@/store/authSlice";
 import { setUser } from "@/store/authSlice";
 import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
@@ -25,7 +24,7 @@ export default function CreateTeamPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [createTeam, { isLoading }] = useCreateTeamMutation();
-  const { refetch } = useCurrentUserQuery(undefined, { skip: true });
+  const user = useAppSelector((s) => s.auth.user);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -34,10 +33,11 @@ export default function CreateTeamPage() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await createTeam(values).unwrap();
-      const me = await refetch();
-      if (me.data?.data) {
-        dispatch(setUser(me.data.data));
+      const res = await createTeam(values).unwrap();
+      // The server promotes the creator to ADMIN and links the team — mirror that
+      // in Redux from the response instead of calling GET /users/me again.
+      if (user) {
+        dispatch(setUser({ ...user, teamId: res.data.team._id, role: "ADMIN" }));
       }
       toast.success("Team created!");
       navigate("/dashboard", { replace: true });

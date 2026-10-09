@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { API_BASE_URL } from "@/lib/api-config";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithAuth } from "@/lib/base-query";
 import type {
   TeamResponse,
   CreateTeamResponse,
@@ -12,14 +12,12 @@ import type {
 export const teamApi = createApi({
   reducerPath: "teamApi",
   tagTypes: ["Team", "Member"],
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_BASE_URL,
-    credentials: "include",
-  }),
+  baseQuery: baseQueryWithAuth,
+  // Team data changes rarely — keep it around across page switches
+  keepUnusedDataFor: 300,
   endpoints: (builder) => ({
     createTeam: builder.mutation<CreateTeamResponse, CreateTeamPayload>({
       query: (body) => ({ url: "/teams", method: "POST", body }),
-      invalidatesTags: ["Team"],
     }),
     getMyTeam: builder.query<TeamResponse, void>({
       query: () => "/teams/my",
@@ -37,13 +35,26 @@ export const teamApi = createApi({
       query: () => ({ url: "/teams/my", method: "DELETE" }),
       invalidatesTags: ["Team", "Member"],
     }),
+    // The endpoint doesn't return the full member, so refetch the list once.
     addMember: builder.mutation<void, AddMemberPayload>({
       query: (body) => ({ url: "/teams/my/members", method: "POST", body }),
       invalidatesTags: ["Member"],
     }),
+    // Removal is applied to the cached list directly — no refetch needed.
     removeMember: builder.mutation<void, string>({
       query: (memberId) => ({ url: `/teams/my/members/${memberId}`, method: "DELETE" }),
-      invalidatesTags: ["Member"],
+      async onQueryStarted(memberId, { dispatch, queryFulfilled }): Promise<void> {
+        const patch = dispatch(
+          teamApi.util.updateQueryData("getTeamMembers", undefined, (draft) => {
+            draft.data = draft.data.filter((m) => m._id !== memberId);
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
     }),
   }),
 });

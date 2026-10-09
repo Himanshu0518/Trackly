@@ -19,10 +19,11 @@ import { useGetTeamMembersQuery } from "@/services/team.services";
 import { toast } from "sonner";
 import { CalendarIcon, X } from "lucide-react";
 import type { IssueType, IssuePriority } from "@/types/user.types";
+import { TYPE_OPTIONS, PRIORITY_OPTIONS } from "@/lib/issue-options";
 
 const schema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
-  description: z.string().optional(),
+  description: z.string().min(1, "Description is required"),
   type: z.enum(["BUG", "FEATURE"] as const),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const),
   assignedTo: z.string().optional(),
@@ -38,7 +39,10 @@ interface NewIssueDialogProps {
 export default function NewIssueDialog({ children }: NewIssueDialogProps) {
   const [open, setOpen] = useState(false);
   const [createIssue, { isLoading }] = useCreateIssueMutation();
-  const { data: membersData } = useGetTeamMembersQuery();
+  // Members are only needed once the dialog is open (and are cached app-wide after the first fetch)
+  const { data: membersData } = useGetTeamMembersQuery(undefined, { skip: !open });
+  // <Select items> makes the trigger show the member's NAME instead of the raw id value
+  const memberItems = (membersData?.data ?? []).map((m) => ({ value: m._id, label: m.name }));
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -93,7 +97,7 @@ export default function NewIssueDialog({ children }: NewIssueDialogProps) {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Optional description..." rows={3} {...field} />
+                    <Textarea placeholder="Describe the issue..." rows={3} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -106,7 +110,7 @@ export default function NewIssueDialog({ children }: NewIssueDialogProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select items={TYPE_OPTIONS} onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
@@ -127,7 +131,7 @@ export default function NewIssueDialog({ children }: NewIssueDialogProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Priority</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select items={PRIORITY_OPTIONS} onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select priority" />
@@ -152,7 +156,7 @@ export default function NewIssueDialog({ children }: NewIssueDialogProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assign to</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select items={memberItems} onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Unassigned" />

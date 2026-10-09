@@ -1,59 +1,42 @@
 import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
-import { useCurrentUserQuery } from "@/services/auth.services";
-import {
-  setUser,
-  clearUser,
-  setInitialized,
-  useAppSelector,
-  useAppDispatch,
-} from "@/store/authSlice";
+import { userApi } from "@/services/auth.services";
+import { setUser, clearUser, useAppDispatch, useAppSelector } from "@/store/authSlice";
 import { Loader2 } from "lucide-react";
 
 /**
- * RootLayout — fires ONE /users/me on cold boot to hydrate Redux.
+ * RootLayout — sits at the very top of the router tree.
  *
- * Skip conditions (no network call made):
- *   1. Already initialized AND no user  → post-logout or first 401 already handled
- *   2. Already initialized AND has user → login/signup already set the store;
- *      no need to re-fetch and risk a race overwriting the fresh state
+ * It restores the session ONCE per page load: the JWT lives in an httpOnly
+ * cookie that JavaScript cannot read, so the only way to learn "am I logged in,
+ * and as whom?" after a refresh is to ask the server (GET /users/me).
+ *
+ * This is a one-shot request, deliberately NOT a live query subscription:
+ *  - nothing can invalidate/refetch it later (no spinner flashes, no unmounting
+ *    of the app while a page is open)
+ *  - after boot, Redux is the single source of truth. Login / signup / create
+ *    team / update profile all set the user straight from their own responses.
  */
 export default function RootLayout() {
   const dispatch = useAppDispatch();
   const isInitialized = useAppSelector((s) => s.auth.isInitialized);
-  // const user = useAppSelector((s) => s.auth.user);
-
-  // Skip whenever auth state is already known — covers both post-login and post-logout
-  const shouldSkip = isInitialized;
-
-  const { data, isLoading, isError, isFetching } = useCurrentUserQuery(
-    undefined,
-    {
-      skip: shouldSkip,
-      refetchOnFocus: false,
-      refetchOnReconnect: false,
-    }
-  );
 
   useEffect(() => {
-    if (isLoading || isFetching) return;
+    // subscribe:false → fire-and-forget; RTK also de-duplicates the request if
+    // React StrictMode runs this effect twice in development.
+    const request = dispatch(
+      userApi.endpoints.currentUser.initiate(undefined, { subscribe: false })
+    );
 
-    if (data?.data) {
-      dispatch(setUser(data.data));
-    } else if (isError) {
-      dispatch(clearUser());
-    }
-  }, [data, isError, isLoading, isFetching, dispatch]);
+    request
+      .unwrap()
+      .then((res) => dispatch(setUser(res.data)))
+      // 401 = no session. Marks the auth state as initialized so guards redirect.
+      .catch(() => dispatch(clearUser()));
+  }, [dispatch]);
 
-  // Mark initialized immediately when the query is skipped
-  useEffect(() => {
-    if (shouldSkip && !isInitialized) {
-      dispatch(setInitialized());
-    }
-  }, [shouldSkip, isInitialized, dispatch]);
-
-  // Only block render on the cold-boot fetch (shouldSkip === false)
-  if (!shouldSkip && (isLoading || isFetching)) {
+  // Block rendering until we know the auth state
+  if (!isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />

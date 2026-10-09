@@ -12,7 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
-import { useLoginMutation } from "@/services/auth.services";
+import { useLoginMutation, userFromAuth } from "@/services/auth.services";
+import { resetSessionCaches } from "@/lib/session";
 import { useAppDispatch, setUser } from "@/store/authSlice";
 import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
@@ -51,17 +52,10 @@ export default function LoginPage() {
     const res = await login({ email, password }).unwrap();
     // Use the user data already returned by the login response —
     // no need for a second /users/me round-trip that races with RootLayout.
-    const { user } = res.data;
-    dispatch(setUser({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      teamId: user.teamId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
-    navigate(user.teamId ? "/dashboard" : "/onboarding/create-team", {
+    const me = userFromAuth(res.data.user);
+    resetSessionCaches(dispatch); // never show a previous user's cached issues/team
+    dispatch(setUser(me));
+    navigate(me.teamId ? "/dashboard" : "/onboarding/create-team", {
       replace: true,
     });
   };

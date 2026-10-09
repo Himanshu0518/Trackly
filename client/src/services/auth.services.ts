@@ -1,30 +1,36 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { API_BASE_URL } from "@/lib/api-config";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithAuth } from "@/lib/base-query";
 import type {
   SignupPayload,
   LoginPayload,
   AuthResponse,
+  AuthUserData,
+  MeUserData,
   MeResponse,
   AllUserResponse,
   UpdateMePayload,
   UserSearchResponse,
 } from "@/types/user.types";
 
+/**
+ * The login / signup response already contains the user, so the app never needs
+ * a second GET /users/me after authenticating. /users/me is only used once per
+ * page load (see RootLayout) to restore the session from the httpOnly cookie.
+ */
+export function userFromAuth(u: AuthUserData["user"]): MeUserData {
+  return { _id: u.id, name: u.name, email: u.email, role: u.role, teamId: u.teamId };
+}
+
 export const userApi = createApi({
   reducerPath: "userApi",
   tagTypes: ["User"],
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_BASE_URL,
-    credentials: "include",
-  }),
+  baseQuery: baseQueryWithAuth,
   endpoints: (builder) => ({
     signUp: builder.mutation<AuthResponse, SignupPayload>({
       query: (body) => ({ url: "/auth/signup", method: "POST", body }),
-      invalidatesTags: ["User"],
     }),
     login: builder.mutation<AuthResponse, LoginPayload>({
       query: (body) => ({ url: "/auth/login", method: "POST", body }),
-      invalidatesTags: ["User"],
     }),
     currentUser: builder.query<MeResponse, void>({
       query: () => "/users/me",
@@ -32,21 +38,9 @@ export const userApi = createApi({
     }),
     logOut: builder.mutation<MeResponse, void>({
       query: () => ({ url: "/auth/logout", method: "POST" }),
-      async onQueryStarted(_, { dispatch, queryFulfilled }) {
-        try {
-          await queryFulfilled;
-          // resetApiState clears all cache — no need for invalidatesTags
-          // (invalidatesTags would trigger a /users/me refetch which would 401)
-          dispatch(userApi.util.resetApiState());
-        } catch (err) {
-          console.error("Logout error:", err);
-        }
-      },
-      // Do NOT add invalidatesTags here — resetApiState already clears everything
     }),
     updateMe: builder.mutation<MeResponse, UpdateMePayload>({
       query: (body) => ({ url: "/users/me", method: "PATCH", body }),
-      invalidatesTags: ["User"],
     }),
     getAllUsers: builder.query<AllUserResponse, void>({
       query: () => "/users",
@@ -62,7 +56,6 @@ export const userApi = createApi({
 export const {
   useSignUpMutation,
   useLoginMutation,
-  useCurrentUserQuery,
   useLogOutMutation,
   useUpdateMeMutation,
   useGetAllUsersQuery,

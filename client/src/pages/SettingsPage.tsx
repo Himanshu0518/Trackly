@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useUpdateMeMutation, useCurrentUserQuery } from "@/services/auth.services";
+import { useUpdateMeMutation } from "@/services/auth.services";
 import { useAppSelector, useAppDispatch, setUser } from "@/store/authSlice";
 import { toast } from "sonner";
 
@@ -18,7 +18,6 @@ export default function SettingsPage() {
   const user = useAppSelector((s) => s.auth.user);
   const dispatch = useAppDispatch();
   const [updateMe, { isLoading }] = useUpdateMeMutation();
-  const { refetch } = useCurrentUserQuery();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -27,9 +26,9 @@ export default function SettingsPage() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await updateMe(values).unwrap();
-      const me = await refetch();
-      if (me.data?.data) dispatch(setUser(me.data.data));
+      // PATCH /users/me already returns the updated user — no refetch needed.
+      const res = await updateMe(values).unwrap();
+      dispatch(setUser(res.data));
       toast.success("Profile updated");
     } catch {
       toast.error("Failed to update profile");

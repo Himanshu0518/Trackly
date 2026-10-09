@@ -92,8 +92,9 @@ export interface MeUserData {
   email: string;
   role: UserRole;
   teamId: string | null;
-  createdAt: string;
-  updatedAt: string;
+  // Present on GET/PATCH /users/me, absent when built from a login/signup response
+  createdAt?: string;
+  updatedAt?: string;
 }
 export type MeResponse = IApiResponse<MeUserData>;
 

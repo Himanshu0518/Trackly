@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { STATUS_OPTIONS, PRIORITY_OPTIONS, TYPE_OPTIONS } from "@/lib/issue-options";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, ArrowLeft, Trash2, CalendarIcon, X, AlertTriangle } from "lucide-react";
@@ -25,7 +26,10 @@ export default function IssueDetailPage() {
   const user = useAppSelector((s) => s.auth.user);
 
   const { data, isLoading } = useGetIssueByIdQuery(id!);
-  const { data: membersData } = useGetTeamMembersQuery();
+  // Only fetch the member list when this user can actually reassign (cached app-wide after the first fetch)
+  const needsMembers =
+    !!data?.data && (data.data.createdBy._id === user?._id || user?.role === "ADMIN");
+  const { data: membersData } = useGetTeamMembersQuery(undefined, { skip: !needsMembers });
   const [updateIssue] = useUpdateIssueMutation();
   const [deleteIssue, { isLoading: isDeleting }] = useDeleteIssueMutation();
   const [addComment, { isLoading: isCommenting }] = useAddCommentMutation();
@@ -51,6 +55,14 @@ export default function IssueDetailPage() {
   const isAdmin = user?.role === "ADMIN";
   const canReassign = isCreator || isAdmin;
 
+  // <Select items> lets the trigger show the member's NAME instead of the raw MongoDB id value
+  const assigneeItems = [
+    { value: "none", label: "Unassigned" },
+    ...(membersData?.data ?? []).map((m) => ({ value: m._id, label: m.name })),
+  ];
+  if (issue.assignedTo && !assigneeItems.some((i) => i.value === issue.assignedTo!._id)) {
+    assigneeItems.push({ value: issue.assignedTo._id, label: issue.assignedTo.name });
+  }
   const handleUpdate = async (patch: Partial<{ title: string; description: string; type: IssueType; status: IssueStatus; priority: IssuePriority; assignedTo: string | null; dueDate: string | null }>) => {
     try {
       await updateIssue({ id: issue._id, ...patch }).unwrap();
@@ -163,7 +175,7 @@ export default function IssueDetailPage() {
           <div className="border border-border rounded-md p-4 space-y-4 text-sm">
             <div>
               <p className="text-xs text-muted-foreground mb-1.5">Status</p>
-              <Select value={issue.status} onValueChange={(v) => handleUpdate({ status: v as IssueStatus })}>
+              <Select items={STATUS_OPTIONS} value={issue.status} onValueChange={(v) => handleUpdate({ status: v as IssueStatus })}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="TODO">To Do</SelectItem>
@@ -175,7 +187,7 @@ export default function IssueDetailPage() {
 
             <div>
               <p className="text-xs text-muted-foreground mb-1.5">Priority</p>
-              <Select value={issue.priority} onValueChange={(v) => handleUpdate({ priority: v as IssuePriority })}>
+              <Select items={PRIORITY_OPTIONS} value={issue.priority} onValueChange={(v) => handleUpdate({ priority: v as IssuePriority })}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="LOW">Low</SelectItem>
@@ -188,7 +200,7 @@ export default function IssueDetailPage() {
 
             <div>
               <p className="text-xs text-muted-foreground mb-1.5">Type</p>
-              <Select value={issue.type} onValueChange={(v) => handleUpdate({ type: v as IssueType })}>
+              <Select items={TYPE_OPTIONS} value={issue.type} onValueChange={(v) => handleUpdate({ type: v as IssueType })}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="BUG">Bug</SelectItem>
@@ -201,17 +213,24 @@ export default function IssueDetailPage() {
               <div>
                 <p className="text-xs text-muted-foreground mb-1.5">Assigned to</p>
                 <Select
+                  items={assigneeItems}
                   value={issue.assignedTo?._id ?? "none"}
                   onValueChange={(v) => handleUpdate({ assignedTo: v === "none" ? null : v })}
                 >
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Unassigned</SelectItem>
-                    {membersData?.data?.map((m) => (
-                      <SelectItem key={m._id} value={m._id}>{m.name}</SelectItem>
+                    {assigneeItems.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+
+            {!canReassign && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-1.5">Assigned to</p>
+                <p className="text-sm">{issue.assignedTo?.name ?? "Unassigned"}</p>
               </div>
             )}
 
