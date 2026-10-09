@@ -73,9 +73,7 @@ export default function SignupPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
-            <span className="text-primary-foreground text-sm font-bold">T</span>
-          </div>
+          <img src="/logo.png" alt="Trackly" className="w-8 h-8 rounded-lg shadow-sm object-contain" />
           <span className="font-semibold text-xl tracking-tight">Trackly</span>
         </div>
 
