@@ -43,6 +43,8 @@ export const getDashboardStats = asyncHandler(
     let todo = 0;
     let inProgress = 0;
     let done = 0;
+    let overdue = 0;
+    const now = new Date();
 
     // Build daily buckets for the past TREND_DAYS
     const today = new Date();
@@ -87,6 +89,11 @@ export const getDashboardStats = asyncHandler(
 
       if (!isDone && openByPriority[issue.priority] !== undefined) {
         openByPriority[issue.priority]++;
+      }
+
+      // Overdue: open issue with a dueDate in the past
+      if (!isDone && issue.dueDate && new Date(issue.dueDate) < now) {
+        overdue++;
       }
 
       // Workload calculation
@@ -139,6 +146,7 @@ export const getDashboardStats = asyncHandler(
       inProgress,
       open,
       done,
+      overdue,
       completionRate,
       openByPriority,
       byType,

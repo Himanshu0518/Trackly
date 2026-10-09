@@ -7,6 +7,7 @@ export const createIssueSchema = z.object({
     type: z.enum(["BUG", "FEATURE"]),
     priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).default("MEDIUM"),
     assignedTo: z.string().optional().nullable(),
+    dueDate: z.string().datetime({ offset: true }).optional().nullable(),
   }),
 });
 
@@ -18,6 +19,7 @@ export const updateIssueSchema = z.object({
     status: z.enum(["TODO", "IN_PROGRESS", "DONE"]).optional(),
     priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
     assignedTo: z.string().nullable().optional(),
+    dueDate: z.string().datetime({ offset: true }).nullable().optional(),
   }),
 });
 

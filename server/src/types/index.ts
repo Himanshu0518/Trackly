@@ -42,6 +42,7 @@ export interface IIssue {
   type: IssueType;
   status: IssueStatus;
   priority: IssuePriority;
+  dueDate?: Date | null;
   createdBy: Types.ObjectId;
   assignedTo: Types.ObjectId | null;
   teamId: Types.ObjectId;

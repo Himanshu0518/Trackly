@@ -83,6 +83,7 @@ const IssueSchema = new mongoose.Schema(
       enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
       default: "MEDIUM",
     },
+    dueDate: { type: Date, default: null },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -167,6 +168,10 @@ async function main() {
   );
 
   // ── Seed issues ───────────────────────────────────────────────────────────
+  const now = new Date();
+  const daysAgo  = (n: number) => new Date(now.getTime() - n * 86_400_000);
+  const daysFrom = (n: number) => new Date(now.getTime() + n * 86_400_000);
+
   const issues = [
     // ── Bugs ────────────────────────────────────────────────────────────────
     {
@@ -176,6 +181,7 @@ async function main() {
       type: "BUG",
       status: "IN_PROGRESS",
       priority: "CRITICAL",
+      dueDate: daysAgo(3),           // ← OVERDUE: was due 3 days ago
       createdBy: admin._id,
       assignedTo: admin._id,
       comments: [
@@ -198,6 +204,7 @@ async function main() {
       type: "BUG",
       status: "TODO",
       priority: "HIGH",
+      dueDate: daysAgo(1),           // ← OVERDUE: due yesterday
       createdBy: member._id,
       assignedTo: admin._id,
       comments: [
@@ -215,6 +222,7 @@ async function main() {
       type: "BUG",
       status: "TODO",
       priority: "MEDIUM",
+      dueDate: daysFrom(5),          // due in 5 days (on track)
       createdBy: member._id,
       assignedTo: member._id,
       comments: [],
@@ -226,6 +234,7 @@ async function main() {
       type: "BUG",
       status: "DONE",
       priority: "HIGH",
+      dueDate: daysAgo(5),           // was due 5 days ago — already resolved, so NOT counted as overdue
       createdBy: admin._id,
       assignedTo: member._id,
       comments: [
@@ -243,6 +252,7 @@ async function main() {
       type: "BUG",
       status: "DONE",
       priority: "CRITICAL",
+      dueDate: null,                 // no due date
       createdBy: admin._id,
       assignedTo: admin._id,
       comments: [
@@ -260,6 +270,7 @@ async function main() {
       type: "BUG",
       status: "IN_PROGRESS",
       priority: "MEDIUM",
+      dueDate: daysAgo(2),           // ← OVERDUE: due 2 days ago
       createdBy: member._id,
       assignedTo: admin._id,
       comments: [],
@@ -271,6 +282,7 @@ async function main() {
       type: "BUG",
       status: "TODO",
       priority: "LOW",
+      dueDate: daysFrom(14),         // due in 2 weeks
       createdBy: member._id,
       assignedTo: null,
       comments: [],
@@ -284,6 +296,7 @@ async function main() {
       type: "FEATURE",
       status: "TODO",
       priority: "HIGH",
+      dueDate: daysAgo(4),           // ← OVERDUE: due 4 days ago
       createdBy: admin._id,
       assignedTo: member._id,
       comments: [
@@ -301,6 +314,7 @@ async function main() {
       type: "FEATURE",
       status: "TODO",
       priority: "HIGH",
+      dueDate: daysFrom(3),          // due in 3 days — tight but not overdue
       createdBy: admin._id,
       assignedTo: null,
       comments: [],
@@ -312,6 +326,7 @@ async function main() {
       type: "FEATURE",
       status: "TODO",
       priority: "MEDIUM",
+      dueDate: daysFrom(21),         // due in 3 weeks
       createdBy: admin._id,
       assignedTo: null,
       comments: [
@@ -329,6 +344,7 @@ async function main() {
       type: "FEATURE",
       status: "IN_PROGRESS",
       priority: "MEDIUM",
+      dueDate: daysFrom(7),          // due next week
       createdBy: member._id,
       assignedTo: member._id,
       comments: [
@@ -351,6 +367,7 @@ async function main() {
       type: "FEATURE",
       status: "DONE",
       priority: "LOW",
+      dueDate: null,                 // no due date
       createdBy: member._id,
       assignedTo: member._id,
       comments: [
@@ -368,6 +385,7 @@ async function main() {
       type: "FEATURE",
       status: "TODO",
       priority: "MEDIUM",
+      dueDate: daysFrom(10),         // due in 10 days
       createdBy: admin._id,
       assignedTo: null,
       comments: [],
@@ -379,6 +397,7 @@ async function main() {
       type: "FEATURE",
       status: "TODO",
       priority: "LOW",
+      dueDate: null,                 // no due date
       createdBy: admin._id,
       assignedTo: null,
       comments: [],
@@ -390,6 +409,7 @@ async function main() {
       type: "FEATURE",
       status: "TODO",
       priority: "HIGH",
+      dueDate: daysAgo(6),           // ← OVERDUE: due 6 days ago
       createdBy: admin._id,
       assignedTo: null,
       comments: [
@@ -409,7 +429,7 @@ async function main() {
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("");
   console.log("  Team      : Trackly Core");
-  console.log(`  Issues    : ${issues.length} seeded`);
+  console.log(`  Issues    : ${issues.length} seeded (5 overdue, 4 upcoming, 3 no due date)`);
   console.log("");
   console.log("  👤 Admin account");
   console.log(`     Email    : ${ADMIN_EMAIL}`);

@@ -83,7 +83,7 @@ export const createIssue = asyncHandler(async (req: Request, res: Response) => {
   const { userId, teamId } = req.user!;
   if (!teamId) throw new ApiError("You are not part of any team", 403);
 
-  const { title, description, type, priority, assignedTo } =
+  const { title, description, type, priority, assignedTo, dueDate } =
     req.body as CreateIssueBody;
 
   const issue = await Issue.create({
@@ -92,6 +92,7 @@ export const createIssue = asyncHandler(async (req: Request, res: Response) => {
     type,
     priority,
     status: "TODO",
+    dueDate: dueDate ? new Date(dueDate) : null,
     createdBy: new Types.ObjectId(userId),
     assignedTo: assignedTo ? new Types.ObjectId(assignedTo) : null,
     teamId: new Types.ObjectId(teamId),
@@ -117,7 +118,7 @@ export const updateIssue = asyncHandler(async (req: Request, res: Response) => {
   const issue = await Issue.findOne({ _id: req.params.id, teamId });
   if (!issue) throw new ApiError("Issue not found", 404);
 
-  const { title, description, type, status, priority, assignedTo } =
+  const { title, description, type, status, priority, assignedTo, dueDate } =
     req.body as UpdateIssueBody;
 
   // Only creator or ADMIN may reassign
@@ -136,6 +137,8 @@ export const updateIssue = asyncHandler(async (req: Request, res: Response) => {
   if (priority !== undefined) issue.priority = priority;
   if (assignedTo !== undefined)
     issue.assignedTo = assignedTo ? new Types.ObjectId(assignedTo) : null;
+  if (dueDate !== undefined)
+    issue.dueDate = dueDate ? new Date(dueDate) : null;
 
   await issue.save();
 

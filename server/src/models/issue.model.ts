@@ -35,6 +35,7 @@ const IssueSchema = new Schema<IIssue & Document>(
       enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"] satisfies IssuePriority[],
       default: "MEDIUM",
     },
+    dueDate: { type: Date, default: null },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     assignedTo: { type: Schema.Types.ObjectId, ref: "User", default: null },
     teamId: { type: Schema.Types.ObjectId, ref: "Team", required: true },
