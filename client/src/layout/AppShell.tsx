@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, ListTodo, Users, Settings, LogOut, ChevronRight, LayoutGrid, UserCircle2,
+  LayoutDashboard, ListTodo, Users, Settings, LogOut, ChevronRight, LayoutGrid, UserCircle2, Menu, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,22 @@ export default function AppShell() {
   const user = useAppSelector((state) => state.auth.user);
   const [logOut, { isLoading: isLoggingOut }] = useLogOutMutation();
 
+  // Below `lg` the sidebar becomes an off-canvas drawer opened from the header.
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Close the drawer after navigating
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [location.pathname]);
+
+  // Esc closes the drawer
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setDrawerOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [drawerOpen]);
+
   const handleLogout = async () => {
     try {
       await logOut().unwrap();
@@ -53,11 +70,32 @@ export default function AppShell() {
     (location.pathname === "/profile" ? "Profile" : "Dashboard");
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    // h-dvh (not h-screen) so mobile browser toolbars don't push content off-screen
+    <div className="flex h-dvh bg-background overflow-hidden">
+      {/* ── Drawer backdrop (mobile / tablet only) ───────────────────────── */}
+      <div
+        onClick={() => setDrawerOpen(false)}
+        aria-hidden="true"
+        className={cn(
+          "fixed inset-0 z-40 bg-black/50 transition-opacity duration-200 lg:hidden",
+          drawerOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        )}
+      />
+
       {/* ── Sidebar ──────────────────────────────────────────────────────── */}
-      <aside className="w-60 flex-shrink-0 border-r border-border flex flex-col bg-sidebar">
+      <aside
+        id="app-sidebar"
+        className={cn(
+          "flex flex-col bg-sidebar border-r border-border",
+          // mobile/tablet: slides in over the content
+          "fixed inset-y-0 left-0 z-50 w-64 max-w-[85vw] transition-all duration-200",
+          drawerOpen ? "translate-x-0 visible" : "-translate-x-full invisible",
+          // laptop+: always visible, part of the flex layout
+          "lg:static lg:z-auto lg:w-60 lg:max-w-none lg:translate-x-0 lg:visible lg:flex-shrink-0"
+        )}
+      >
         {/* Logo */}
-        <div className="h-14 flex items-center px-5 border-b border-sidebar-border">
+        <div className="h-14 flex items-center justify-between px-5 border-b border-sidebar-border shrink-0">
           <div className="flex items-center gap-2.5">
             <img
               src="/logo.png"
@@ -68,6 +106,15 @@ export default function AppShell() {
               Trackly
             </span>
           </div>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="lg:hidden text-sidebar-foreground/60"
+            onClick={() => setDrawerOpen(false)}
+            aria-label="Close menu"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* Nav */}
@@ -81,7 +128,8 @@ export default function AppShell() {
                 key={href}
                 onClick={() => navigate(href)}
                 className={cn(
-                  "w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  // taller tap target on touch screens, compact on laptop
+                  "w-full flex items-center gap-2.5 px-3 py-2.5 lg:py-2 rounded-md text-sm font-medium transition-colors",
                   active
                     ? "bg-primary/10 text-primary"
                     : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
@@ -99,7 +147,7 @@ export default function AppShell() {
         <Separator className="bg-sidebar-border" />
 
         {/* User footer */}
-        <div className="p-3 space-y-1">
+        <div className="p-3 space-y-1 shrink-0">
           <button
             onClick={() => navigate("/profile")}
             className={cn(
@@ -144,7 +192,7 @@ export default function AppShell() {
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start gap-2 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent text-xs h-8"
+            className="w-full justify-start gap-2 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent text-xs h-9 lg:h-8"
             onClick={handleLogout}
             disabled={isLoggingOut}
           >
@@ -155,19 +203,34 @@ export default function AppShell() {
       </aside>
 
       {/* ── Main ──────────────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      {/* min-w-0 lets this flex child shrink below its content width, which is
+          what stops wide tables/charts from forcing horizontal page scroll */}
+      <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-14 border-b border-border flex items-center justify-between px-6 flex-shrink-0 bg-background">
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <span>Trackly</span>
-            <ChevronRight className="h-3.5 w-3.5" />
-            <span className="text-foreground font-medium">{currentPage}</span>
+        <header className="h-14 border-b border-border flex items-center justify-between gap-3 px-4 sm:px-6 flex-shrink-0 bg-background">
+          <div className="flex items-center gap-2 min-w-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden -ml-1.5 shrink-0"
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Open menu"
+              aria-expanded={drawerOpen}
+              aria-controls="app-sidebar"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground min-w-0">
+              <span className="hidden sm:inline">Trackly</span>
+              <ChevronRight className="h-3.5 w-3.5 hidden sm:inline shrink-0" />
+              <span className="text-foreground font-medium truncate">{currentPage}</span>
+            </div>
           </div>
           <ThemeToggle />
         </header>
 
         {/* Page content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
           <Outlet />
         </div>
       </main>

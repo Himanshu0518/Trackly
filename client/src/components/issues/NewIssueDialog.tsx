@@ -71,7 +71,7 @@ export default function NewIssueDialog({ children }: NewIssueDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={children as React.ReactElement} />
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[480px] max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>New Issue</DialogTitle>
         </DialogHeader>
@@ -103,7 +103,7 @@ export default function NewIssueDialog({ children }: NewIssueDialogProps) {
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormField
                 control={form.control}
                 name="type"
@@ -149,7 +149,7 @@ export default function NewIssueDialog({ children }: NewIssueDialogProps) {
                 )}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormField
                 control={form.control}
                 name="assignedTo"

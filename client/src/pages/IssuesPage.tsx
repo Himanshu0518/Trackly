@@ -170,7 +170,7 @@ export default function IssuesPage() {
         : members.find((m) => m._id === filters.assignedTo)?.name ?? "Assignee";
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-4 sm:p-6 space-y-5">
       {/* ── Page Header ── */}
       <div className="flex items-center justify-between">
         <div>
@@ -222,7 +222,7 @@ export default function IssuesPage() {
             placeholder="Search by title or description…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-9 h-9 text-xs"
+            className="pl-9 h-9 text-base sm:text-xs"
           />
           {searchInput && (
             <button
@@ -243,7 +243,7 @@ export default function IssuesPage() {
             value={filters.status ?? "all"}
             onValueChange={(v) => set("status", !v || v === "all" ? undefined : (v as IssueStatus))}
           >
-            <SelectTrigger className="h-8 text-xs w-auto min-w-[130px]">
+            <SelectTrigger className="h-8 text-xs w-auto flex-1 sm:flex-none min-w-[130px]">
               <LabeledValue
                 prefix="Status"
                 value={filters.status ?? "all"}
@@ -264,7 +264,7 @@ export default function IssuesPage() {
             value={filters.type ?? "all"}
             onValueChange={(v) => set("type", !v || v === "all" ? undefined : (v as IssueType))}
           >
-            <SelectTrigger className="h-8 text-xs w-auto min-w-[110px]">
+            <SelectTrigger className="h-8 text-xs w-auto flex-1 sm:flex-none min-w-[110px]">
               <LabeledValue
                 prefix="Type"
                 value={filters.type ?? "all"}
@@ -284,7 +284,7 @@ export default function IssuesPage() {
             value={filters.priority ?? "all"}
             onValueChange={(v) => set("priority", !v || v === "all" ? undefined : (v as IssuePriority))}
           >
-            <SelectTrigger className="h-8 text-xs w-auto min-w-[130px]">
+            <SelectTrigger className="h-8 text-xs w-auto flex-1 sm:flex-none min-w-[130px]">
               <LabeledValue
                 prefix="Priority"
                 value={filters.priority ?? "all"}
@@ -306,7 +306,7 @@ export default function IssuesPage() {
             value={filters.assignedTo ?? "all"}
             onValueChange={(v) => set("assignedTo", !v || v === "all" ? undefined : v)}
           >
-            <SelectTrigger className="h-8 text-xs w-auto min-w-[140px]">
+            <SelectTrigger className="h-8 text-xs w-auto flex-1 sm:flex-none min-w-[140px]">
               <User className="h-3.5 w-3.5 mr-1.5 text-muted-foreground shrink-0" />
               <span className={filters.assignedTo ? "text-foreground font-medium" : "text-muted-foreground"}>
                 <span className="text-muted-foreground font-normal">Assignee:</span>{" "}
@@ -324,7 +324,7 @@ export default function IssuesPage() {
 
           {/* Sort — pushed to the right */}
           <Select value={currentSortKey} onValueChange={handleSortChange}>
-            <SelectTrigger className="h-8 text-xs w-auto min-w-[160px] ml-auto">
+            <SelectTrigger className="h-8 text-xs w-auto flex-1 sm:flex-none min-w-[160px] ml-auto">
               <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground shrink-0" />
               <span className="text-muted-foreground">
                 <span className="font-normal">Sort:</span>{" "}
@@ -376,7 +376,52 @@ export default function IssuesPage() {
           )}
         </div>
       ) : (
-        <div className="border border-border rounded-xl overflow-hidden shadow-xs bg-card">
+        <>
+        {/* Phones: card list (a 7-column table doesn't fit) */}
+        <div className="md:hidden space-y-2">
+          {issues.map((issue) => {
+            const overdue = isOverdue(issue);
+            return (
+              <div
+                key={issue._id}
+                onClick={() => navigate(`/issues/${issue._id}`)}
+                className={`rounded-xl border bg-card p-3.5 cursor-pointer active:bg-muted/40 transition-colors ${
+                  overdue ? "border-red-500/30" : "border-border"
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  {overdue && <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" aria-label="Overdue" />}
+                  <p className="text-sm font-medium text-foreground break-words min-w-0">{issue.title}</p>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
+                  <TypeBadge type={issue.type} />
+                  <StatusBadge status={issue.status} />
+                  <PriorityBadge priority={issue.priority} />
+                </div>
+                <div className="flex items-center justify-between gap-3 mt-2.5 text-xs">
+                  {issue.assignedTo?.name ? (
+                    <span className="flex items-center gap-1 text-foreground font-medium min-w-0">
+                      <User className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <span className="truncate">{issue.assignedTo.name}</span>
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground/60 italic">Unassigned</span>
+                  )}
+                  {issue.dueDate && (
+                    <span className={`inline-flex items-center gap-1 shrink-0 font-medium ${overdue ? "text-red-500" : "text-muted-foreground"}`}>
+                      <CalendarClock className="h-3 w-3" />
+                      {formatDueDate(issue.dueDate)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Tablet / laptop: table */}
+        <div className="hidden md:block border border-border rounded-xl overflow-hidden shadow-xs bg-card">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40">
@@ -391,7 +436,7 @@ export default function IssuesPage() {
                     Due date
                   </span>
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs">Created</th>
+                <th className="hidden xl:table-cell text-left px-4 py-3 font-semibold text-muted-foreground text-xs">Created</th>
               </tr>
             </thead>
             <tbody>
@@ -463,7 +508,7 @@ export default function IssuesPage() {
                     </td>
 
                     {/* Created */}
-                    <td className="px-4 py-3 text-muted-foreground text-xs">
+                    <td className="hidden xl:table-cell px-4 py-3 text-muted-foreground text-xs">
                       {new Date(issue.createdAt).toLocaleDateString()}
                     </td>
                   </tr>
@@ -471,7 +516,9 @@ export default function IssuesPage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
+        </>
       )}
     </div>
   );

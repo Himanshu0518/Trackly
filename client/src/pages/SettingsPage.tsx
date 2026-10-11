@@ -67,7 +67,7 @@ export default function SettingsPage() {
   const isAdmin = user?.role === "ADMIN";
 
   return (
-    <div className="p-6 max-w-lg space-y-6">
+    <div className="p-4 sm:p-6 max-w-lg space-y-6">
       <h1 className="text-xl font-semibold">Settings</h1>
 
       {/* ── Profile card ── */}
@@ -109,7 +109,7 @@ export default function SettingsPage() {
             <CardTitle className="text-base text-destructive">Danger Zone</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
               <div>
                 <p className="text-sm font-medium">Leave team</p>
                 <p className="text-xs text-muted-foreground mt-0.5">

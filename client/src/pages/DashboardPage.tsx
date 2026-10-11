@@ -110,7 +110,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 animate-pulse space-y-4">
+      <div className="p-4 sm:p-6 animate-pulse space-y-4">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-28 bg-muted rounded-xl" />
@@ -147,7 +147,7 @@ export default function DashboardPage() {
     .map(([name, value]) => ({ name, value, fill: PRIORITY_COLORS[name] }));
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Analytics</h1>
@@ -207,7 +207,7 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-primary" />
             <p className="text-sm font-semibold text-foreground">Issue History &amp; Trend (14 days)</p>
           </div>
-          <div className="flex gap-4 mb-3">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span className="w-3 h-0.5 rounded-full bg-blue-500 inline-block" /> Created ({stats.createdInRange})
             </span>
@@ -350,7 +350,7 @@ export default function DashboardPage() {
             {stats.recent.map((issue) => (
               <div
                 key={issue._id}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer"
+                className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer"
                 onClick={() => navigate(`/issues/${issue._id}`)}
               >
                 <div className="flex-1 min-w-0">
@@ -359,7 +359,7 @@ export default function DashboardPage() {
                     {issue.assignedTo ? `Assigned to ${issue.assignedTo.name}` : "Unassigned"} · {timeAgo(issue.updatedAt)}
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
+                <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap sm:flex-shrink-0">
                   <TypeBadge type={issue.type} />
                   <StatusBadge status={issue.status} />
                   <PriorityBadge priority={issue.priority} />

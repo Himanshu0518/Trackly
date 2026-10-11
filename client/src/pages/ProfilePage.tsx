@@ -98,7 +98,7 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 animate-pulse space-y-4">
+      <div className="p-4 sm:p-6 animate-pulse space-y-4">
         <div className="h-28 bg-muted rounded-xl" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -116,7 +116,7 @@ export default function ProfilePage() {
   );
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">My Profile</h1>
@@ -126,7 +126,7 @@ export default function ProfilePage() {
       </div>
 
       {/* ── Identity card ── */}
-      <div className="bg-card border border-border rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+      <div className="bg-card border border-border rounded-xl p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
         {/* Avatar */}
         <div className="w-16 h-16 rounded-full bg-primary/10 ring-2 ring-primary/20 flex items-center justify-center shrink-0">
           <span className="text-2xl font-bold text-primary">
@@ -147,7 +147,7 @@ export default function ProfilePage() {
                     if (e.key === "Enter") handleSave();
                     if (e.key === "Escape") handleCancel();
                   }}
-                  className="h-8 text-lg font-semibold w-48"
+                  className="h-8 text-lg font-semibold w-full max-w-48 min-w-0"
                   autoFocus
                 />
                 <Button
@@ -298,7 +298,7 @@ function IssueRow({ issue, onClick }: { issue: IssueData; onClick: () => void })
   return (
     <div
       onClick={onClick}
-      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer"
+      className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer"
     >
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{issue.title}</p>
@@ -308,7 +308,7 @@ function IssueRow({ issue, onClick }: { issue: IssueData; onClick: () => void })
             : `Updated ${timeAgo(issue.updatedAt)}`}
         </p>
       </div>
-      <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap sm:shrink-0">
         <TypeBadge type={issue.type} />
         <StatusBadge status={issue.status} />
         <PriorityBadge priority={issue.priority} />

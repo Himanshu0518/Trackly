@@ -95,7 +95,7 @@ export default function LoginPage() {
   const isTestLoading = testState === "loading";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-dvh flex items-center justify-center bg-background px-4 py-16">
       {/* Theme toggle */}
       <div className="fixed top-4 right-4">
         <ThemeToggle />

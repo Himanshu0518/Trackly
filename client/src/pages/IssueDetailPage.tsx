@@ -48,7 +48,7 @@ export default function IssueDetailPage() {
   }
 
   if (!issue) {
-    return <div className="p-6 text-muted-foreground text-sm">Issue not found.</div>;
+    return <div className="p-4 sm:p-6 text-muted-foreground text-sm">Issue not found.</div>;
   }
 
   const isCreator = issue.createdBy._id === user?._id;
@@ -94,20 +94,20 @@ export default function IssueDetailPage() {
   };
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="p-4 sm:p-6 max-w-4xl">
       <Button variant="ghost" size="sm" className="gap-1.5 mb-6 -ml-1 text-muted-foreground" onClick={() => navigate(-1)}>
         <ArrowLeft className="h-4 w-4" /> Back
       </Button>
 
-      <div className="grid grid-cols-[1fr_220px] gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_220px] gap-6 md:gap-8">
         {/* Main */}
         <div>
-          <h1 className="text-xl font-semibold mb-1">{issue.title}</h1>
+          <h1 className="text-xl font-semibold mb-1 break-words">{issue.title}</h1>
           <p className="text-sm text-muted-foreground mb-4">
             Opened by {issue.createdBy.name} · {new Date(issue.createdAt).toLocaleDateString()}
           </p>
 
-          <div className="flex gap-2 mb-6">
+          <div className="flex flex-wrap gap-2 mb-6">
             <TypeBadge type={issue.type} />
             <StatusBadge status={issue.status} />
             <PriorityBadge priority={issue.priority} />
@@ -125,7 +125,7 @@ export default function IssueDetailPage() {
           </div>
 
           {issue.description && (
-            <div className="text-sm text-muted-foreground leading-relaxed mb-8 p-4 bg-muted/30 rounded-md border border-border">
+            <div className="text-sm text-muted-foreground leading-relaxed mb-8 p-4 bg-muted/30 rounded-md border border-border whitespace-pre-wrap break-words">
               {issue.description}
             </div>
           )}
@@ -142,12 +142,12 @@ export default function IssueDetailPage() {
                     {getInitials(c.userId.name)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-medium">{c.userId.name}</span>
                     <span className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">{c.text}</p>
+                  <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{c.text}</p>
                 </div>
               </div>
             ))}
@@ -251,7 +251,7 @@ export default function IssueDetailPage() {
                       <CalendarIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                       <Input
                         type="date"
-                        className={`h-8 text-xs pl-7 pr-7 ${isOverdue ? "border-red-500/60 text-red-500 focus-visible:ring-red-500/30" : ""}`}
+                        className={`h-8 text-base sm:text-xs pl-7 pr-7 ${isOverdue ? "border-red-500/60 text-red-500 focus-visible:ring-red-500/30" : ""}`}
                         value={currentValue}
                         onChange={(e) => {
                           const v = e.target.value;

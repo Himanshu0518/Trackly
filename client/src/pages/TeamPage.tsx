@@ -96,7 +96,7 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl space-y-6">
+    <div className="p-4 sm:p-6 max-w-3xl space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Team</h1>
@@ -221,7 +221,7 @@ export default function TeamPage() {
           ) : (
             <div className="divide-y divide-border">
               {members.map((m) => (
-                <div key={m._id} className="flex items-center gap-3 px-6 py-3">
+                <div key={m._id} className="flex items-center gap-3 px-4 sm:px-6 py-3">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
                       {getInitials(m.name)}

@@ -67,7 +67,7 @@ function DraggableCard({ issue, isDragging }: DraggableCardProps) {
         <button
           {...attributes}
           {...listeners}
-          className="mt-0.5 flex-shrink-0 p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/60 transition-colors cursor-grab active:cursor-grabbing focus:outline-none"
+          className="mt-0.5 flex-shrink-0 p-1.5 sm:p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/60 transition-colors cursor-grab active:cursor-grabbing focus:outline-none touch-none"
           tabIndex={-1}
           aria-label="Drag to reorder"
         >
@@ -120,6 +120,8 @@ function Column({ column, issues, isOver }: ColumnProps) {
       ref={setNodeRef}
       className={cn(
         "flex flex-col min-h-0 rounded-xl border transition-colors duration-150",
+        // phones/tablets: fixed-width columns in a horizontally scrollable row; laptop: 3 equal columns
+        "shrink-0 w-[85%] sm:w-[46%] snap-start lg:w-auto lg:shrink",
         "bg-muted/30",
         isOver ? "border-primary/40 bg-primary/5" : "border-border/60"
       )}
@@ -237,9 +239,9 @@ export default function BoardPage() {
   }
 
   return (
-    <div className="p-6 h-full flex flex-col">
+    <div className="p-4 sm:p-6 h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 flex-shrink-0">
+      <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6 flex-shrink-0">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Board</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -262,7 +264,7 @@ export default function BoardPage() {
         onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}
       >
-        <div className="grid grid-cols-3 gap-4 flex-1 min-h-0 overflow-y-auto pb-2">
+        <div className="flex gap-3 sm:gap-4 flex-1 min-h-0 overflow-auto snap-x snap-proximity pb-3 lg:grid lg:grid-cols-3 lg:pb-2">
           {COLUMNS.map((col) => (
             <Column
               key={col.id}
