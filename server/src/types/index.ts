@@ -36,6 +36,21 @@ export interface IComment {
   createdAt: Date;
 }
 
+export type ActivityType =
+  | "CREATED"
+  | "STATUS_CHANGE"
+  | "PRIORITY_CHANGE"
+  | "ASSIGNMENT_CHANGE";
+
+export interface IIssueActivity {
+  userId: Types.ObjectId;
+  type: ActivityType;
+  field?: string;
+  oldValue?: string;
+  newValue?: string;
+  createdAt: Date;
+}
+
 export interface IIssue {
   title: string;
   description: string;
@@ -47,6 +62,30 @@ export interface IIssue {
   assignedTo: Types.ObjectId | null;
   teamId: Types.ObjectId;
   comments: IComment[];
+  activities?: IIssueActivity[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ─── Notification ─────────────────────────────────────────────────────────────
+
+export type NotificationType =
+  | "TASK_ASSIGNED"
+  | "MENTIONED_IN_COMMENT"
+  | "STATUS_CHANGED"
+  | "PRIORITY_CHANGED"
+  | "COMMENT_ADDED";
+
+export interface INotification {
+  recipient: Types.ObjectId;
+  sender: Types.ObjectId;
+  teamId: Types.ObjectId;
+  issueId: Types.ObjectId;
+  type: NotificationType;
+  title: string;
+  message: string;
+  read: boolean;
+  link: string;
   createdAt: Date;
   updatedAt: Date;
 }

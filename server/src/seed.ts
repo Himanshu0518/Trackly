@@ -99,10 +99,26 @@ const IssueSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const NotificationSchema = new mongoose.Schema(
+  {
+    recipient: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    sender: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    teamId: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
+    issueId: { type: mongoose.Schema.Types.ObjectId, ref: "Issue", required: true },
+    type: { type: String, required: true },
+    title: { type: String, required: true },
+    message: { type: String, required: true },
+    read: { type: Boolean, default: false },
+    link: { type: String, default: "" },
+  },
+  { timestamps: true }
+);
+
 // Use existing models if already registered (safe for re-runs)
 const User = mongoose.models["User"] ?? mongoose.model("User", UserSchema);
 const Team = mongoose.models["Team"] ?? mongoose.model("Team", TeamSchema);
 const Issue = mongoose.models["Issue"] ?? mongoose.model("Issue", IssueSchema);
+const Notification = mongoose.models["Notification"] ?? mongoose.model("Notification", NotificationSchema);
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
@@ -119,6 +135,7 @@ async function main() {
   const existing = await User.findOne({ email: ADMIN_EMAIL });
   if (existing?.teamId) {
     const teamId = existing.teamId;
+    await Notification.deleteMany({ teamId });
     await Issue.deleteMany({ teamId });
     await User.deleteMany({ email: { $in: [ADMIN_EMAIL, MEMBER_EMAIL] } });
     await Team.findByIdAndDelete(teamId);
@@ -417,14 +434,73 @@ async function main() {
     },
   ];
 
-  await Issue.insertMany(issues.map((i) => ({ ...i, teamId: team._id })));
+  const insertedIssues = await Issue.insertMany(
+    issues.map((i) => ({ ...i, teamId: team._id }))
+  );
+
+  // ── Seed realistic notifications ─────────────────────────────────────────
+  const issue1 = insertedIssues[0];
+  const issue2 = insertedIssues[1];
+  const issue3 = insertedIssues[2];
+
+  await Notification.insertMany([
+    {
+      recipient: member._id,
+      sender: admin._id,
+      teamId: team._id,
+      issueId: issue1._id,
+      type: "TASK_ASSIGNED",
+      title: "Task Assigned",
+      message: `Alex Admin assigned you to "${issue1.title}"`,
+      read: false,
+      link: `/issues/${issue1._id}`,
+      createdAt: new Date(Date.now() - 1000 * 60 * 15), // 15 mins ago
+    },
+    {
+      recipient: member._id,
+      sender: admin._id,
+      teamId: team._id,
+      issueId: issue2._id,
+      type: "MENTIONED_IN_COMMENT",
+      title: "Mentioned in comment",
+      message: `Alex Admin tagged you on "${issue2.title}": "@Morgan Member please take a look at the logs"`,
+      read: false,
+      link: `/issues/${issue2._id}`,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+    },
+    {
+      recipient: member._id,
+      sender: admin._id,
+      teamId: team._id,
+      issueId: issue3._id,
+      type: "STATUS_CHANGED",
+      title: "Task Status Updated",
+      message: `Alex Admin moved "${issue3.title}" to IN_PROGRESS`,
+      read: true,
+      link: `/issues/${issue3._id}`,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+    },
+    {
+      recipient: admin._id,
+      sender: member._id,
+      teamId: team._id,
+      issueId: issue1._id,
+      type: "COMMENT_ADDED",
+      title: "New comment on your task",
+      message: `Morgan Member commented on "${issue1.title}": "I have reproduced this in staging"`,
+      read: false,
+      link: `/issues/${issue1._id}`,
+      createdAt: new Date(Date.now() - 1000 * 60 * 45), // 45 mins ago
+    },
+  ]);
 
   console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("✅  Seed complete!");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("");
-  console.log("  Team      : Trackly Core");
-  console.log(`  Issues    : ${issues.length} seeded (5 overdue, 4 upcoming, 3 no due date)`);
+  console.log("  Team          : Trackly Core");
+  console.log(`  Issues        : ${issues.length} seeded (5 overdue, 4 upcoming, 3 no due date)`);
+  console.log(`  Notifications : 4 seeded with @mentions and task assignments`);
   console.log("");
   console.log("  👤 Admin account");
   console.log(`     Email    : ${ADMIN_EMAIL}`);

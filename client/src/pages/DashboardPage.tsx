@@ -33,7 +33,7 @@ function StatCard({ label, value, icon, sub, accent = "blue" }: StatCardProps) {
   return (
     <div className={`bg-card border border-border rounded-xl p-5 ring-1 ${ring} hover:shadow-md transition-shadow duration-200`}>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">{label}</span>
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</span>
         <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center`}>
           <span className={text}>{icon}</span>
         </div>

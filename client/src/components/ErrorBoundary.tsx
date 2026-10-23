@@ -2,6 +2,7 @@ import { useRouteError, isRouteErrorResponse, useNavigate } from "react-router-d
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, LayoutDashboard, ArrowLeft } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import Logo from "@/components/Logo";
 
 export default function ErrorBoundary() {
   const error = useRouteError();
@@ -25,31 +26,22 @@ export default function ErrorBoundary() {
   console.error("Trackly Route Error:", error);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-between p-6 relative overflow-hidden">
-      {/* Glow effect */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-destructive/10 rounded-full blur-3xl pointer-events-none -z-10" />
-
+    <div className="min-h-screen bg-background flex flex-col justify-between p-6">
       {/* Top Header */}
       <div className="flex items-center justify-between max-w-5xl mx-auto w-full">
-        <div 
-          onClick={() => navigate("/dashboard")} 
-          className="flex items-center gap-2.5 cursor-pointer select-none group"
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="cursor-pointer select-none group"
+          aria-label="Go to dashboard"
         >
-          <img
-            src="/logo.png"
-            alt="Trackly"
-            className="h-9 w-9 rounded-xl object-contain group-hover:scale-105 transition-transform"
-          />
-          <span className="font-bold text-lg tracking-tight text-foreground">
-            Trackly
-          </span>
-        </div>
+          <Logo size={32} wordmarkClassName="text-lg font-bold group-hover:opacity-80 transition-opacity" />
+        </button>
         <ThemeToggle />
       </div>
 
       {/* Center card */}
       <div className="max-w-lg w-full mx-auto my-auto text-center py-10">
-        <div className="inline-flex items-center justify-center p-4 rounded-2xl bg-card border border-border/80 shadow-md mb-6 relative">
+        <div className="inline-flex items-center justify-center p-4 rounded-2xl bg-card border border-border/80 shadow-sm mb-6 relative">
           <div className="h-14 w-14 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive">
             <AlertTriangle className="h-7 w-7 stroke-[1.75]" />
           </div>
@@ -59,7 +51,7 @@ export default function ErrorBoundary() {
           Status {errorStatus}
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-2">
           Something unexpected occurred
         </h1>
         <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto leading-relaxed">

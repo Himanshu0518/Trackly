@@ -16,6 +16,22 @@ const CommentSchema = new Schema<IComment>(
   { _id: false }
 );
 
+const ActivitySchema = new Schema(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    type: {
+      type: String,
+      enum: ["CREATED", "STATUS_CHANGE", "PRIORITY_CHANGE", "ASSIGNMENT_CHANGE"],
+      required: true,
+    },
+    field: { type: String },
+    oldValue: { type: String },
+    newValue: { type: String },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 const IssueSchema = new Schema<IIssue & Document>(
   {
     title: { type: String, required: true, trim: true },
@@ -40,6 +56,7 @@ const IssueSchema = new Schema<IIssue & Document>(
     assignedTo: { type: Schema.Types.ObjectId, ref: "User", default: null },
     teamId: { type: Schema.Types.ObjectId, ref: "Team", required: true },
     comments: { type: [CommentSchema], default: [] },
+    activities: { type: [ActivitySchema], default: [] },
   },
   { timestamps: true }
 );

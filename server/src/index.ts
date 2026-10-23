@@ -54,4 +54,9 @@ const start = async () => {
   });
 };
 
-start();
+// Exit non-zero on startup failure so process managers (Render, PM2) can
+// detect and restart, instead of an unhandled rejection hanging silently
+start().catch((err) => {
+  console.error("Fatal startup error:", err);
+  process.exit(1);
+});

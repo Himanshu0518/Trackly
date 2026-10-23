@@ -11,6 +11,7 @@ import { useCreateTeamMutation } from "@/services/team.services";
 import { useAppDispatch, useAppSelector } from "@/store/authSlice";
 import { setUser } from "@/store/authSlice";
 import ThemeToggle from "@/components/ThemeToggle";
+import Logo from "@/components/Logo";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -56,9 +57,8 @@ export default function CreateTeamPage() {
         <ThemeToggle />
       </div>
       <div className="w-full max-w-sm">
-        <div className="flex items-center justify-center gap-2.5 mb-8">
-          <img src="/logo.png" alt="Trackly" className="w-8 h-8 rounded-lg shadow-sm object-contain" />
-          <span className="font-semibold text-xl tracking-tight">Trackly</span>
+        <div className="flex justify-center mb-8">
+          <Logo size={34} wordmarkClassName="text-xl" />
         </div>
         <Card className="shadow-sm border-border">
           <CardHeader className="pb-5">

@@ -42,7 +42,10 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
 
-  const regex = new RegExp(q, "i");
+  // Escape user input so "(" or ".*" can't crash the regex or act as a
+  // pattern (regex injection / ReDoS vector)
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(escaped, "i");
 
   const users = await User.find({
     teamId: null, // only users without a team

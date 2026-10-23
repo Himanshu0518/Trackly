@@ -31,11 +31,12 @@ Trackly is a collaborative issue tracking application. A user signs up, creates 
 
 ![Database schema](./client/public/trackly.png)
 
-Three collections keep the data model simple and avoid redundancy:
+Four primary collections keep the data model performant and maintainable:
 
 - **User** holds a `teamId` reference — no members array on Team. Members are found by querying `User.teamId`.
-- **Team** stores only metadata and a `createdBy` pointer.
-- **Issue** embeds comments as a sub-document array since comments have no independent lifecycle.
+- **Team** stores metadata and a `createdBy` pointer.
+- **Issue** embeds comments and activities as sub-documents for fast single-roundtrip detail retrieval and atomic updates.
+- **Notification** stores user notifications with compound indexes (`recipient + read`, `recipient + createdAt`) for sub-millisecond inbox queries.
 
 ---
 
@@ -43,15 +44,19 @@ Three collections keep the data model simple and avoid redundancy:
 
 | Feature | Description |
 |---|---|
-| **Authentication** | JWT in httpOnly cookies with bcrypt password hashing |
-| **Team Workspaces** | Isolated environments; one team per user |
-| **Role-Based Access** | `ADMIN` and `MEMBER` roles enforced in middleware |
+| **Notification Center** | In-app notification center with real-time polling, unread badges, filter tabs, and direct link routing |
+| **@Mention Tagging** | Intelligent mention parser (`@Name`, `@Email`) with interactive autocomplete dropdown and highlighted mention chips |
+| **Task Assignment Alerts** | Automated notifications dispatched when tasks are assigned or reassigned to teammates |
+| **Audit & Activity Log** | Chronological timeline tracking status transitions, priority changes, reassignments, and comments |
+| **Authentication** | JWT in httpOnly cookies & Bearer tokens with bcrypt password hashing |
+| **Team Workspaces** | Isolated multi-tenant environments; one team per user with role-based policies |
+| **Role-Based Access** | `ADMIN` and `MEMBER` roles enforced in middleware and granular controller gates |
 | **Issue Management** | Full CRUD with type, priority, assignee, due date, and comments |
-| **Status Workflow** | `TODO` → `IN_PROGRESS` → `DONE` |
+| **Status Workflow** | `TODO` → `IN_PROGRESS` → `DONE` with activity tracking |
 | **Kanban Board** | Drag-and-drop with optimistic UI updates and automatic rollback |
 | **Issue Filtering** | Server-side filtering by status, type, priority, assignee, and full-text search |
 | **Analytics Dashboard** | Status breakdown, priority distribution, trend chart, and per-member workload |
-| **Theme Support** | System-aware dark / light mode |
+| **Theme Support** | System-aware dark / light mode with fluid UI tokens |
 
 ---
 

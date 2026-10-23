@@ -213,6 +213,21 @@ export interface CommentData {
   createdAt: string;
 }
 
+export type ActivityType =
+  | "CREATED"
+  | "STATUS_CHANGE"
+  | "PRIORITY_CHANGE"
+  | "ASSIGNMENT_CHANGE";
+
+export interface IssueActivityData {
+  userId: PopulatedUser;
+  type: ActivityType;
+  field?: string;
+  oldValue?: string;
+  newValue?: string;
+  createdAt: string;
+}
+
 export interface IssueData {
   _id: string;
   title: string;
@@ -225,6 +240,7 @@ export interface IssueData {
   assignedTo: PopulatedUser | null;
   teamId: string;
   comments: CommentData[];
+  activities?: IssueActivityData[];
   createdAt: string;
   updatedAt: string;
 }
@@ -270,3 +286,38 @@ export interface MyStats {
 }
 
 export type MyStatsResponse = IApiResponse<MyStats>;
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+export type NotificationType =
+  | "TASK_ASSIGNED"
+  | "MENTIONED_IN_COMMENT"
+  | "STATUS_CHANGED"
+  | "PRIORITY_CHANGED"
+  | "COMMENT_ADDED";
+
+export interface NotificationData {
+  _id: string;
+  recipient: string;
+  sender: PopulatedUser;
+  teamId: string;
+  issueId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  read: boolean;
+  link: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationsResult {
+  notifications: NotificationData[];
+  total: number;
+  unreadCount: number;
+  page: number;
+  pages: number;
+}
+
+export type NotificationsResponse = IApiResponse<NotificationsResult>;
+export type UnreadCountResponse = IApiResponse<{ count: number }>;
+export type NotificationResponse = IApiResponse<NotificationData>;

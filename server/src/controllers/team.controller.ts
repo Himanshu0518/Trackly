@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
-import { Team, User } from "@/models/index.js";
+import { Notification, Team, User } from "@/models/index.js";
 import { asyncHandler } from "@/utils/asyncHandler.js";
 import { createAuthToken } from "@/utils/user-utils.js";
 import { accessTokenCookieOptions } from "@/utils/cookie-options.js";
@@ -87,6 +87,10 @@ export const deleteTeam = asyncHandler(async (req: Request, res: Response) => {
   await Team.findByIdAndDelete(teamId);
   await User.updateMany({ teamId }, { $set: { teamId: null, role: "MEMBER" } });
 
+  // Orphaned notifications would otherwise linger forever — they're scoped
+  // to a team that no longer exists
+  await Notification.deleteMany({ teamId });
+
   const token = createAuthToken(userId, "MEMBER", null);
 
   res
@@ -136,6 +140,10 @@ export const removeMember = asyncHandler(
     target.role = "MEMBER";
     await target.save();
 
+    // Drop the removed member's notifications for this team — they can no
+    // longer access the issues they link to
+    await Notification.deleteMany({ recipient: target._id, teamId });
+
     res.json(new ApiResponse(null, "Member removed successfully"));
   }
 );
@@ -158,6 +166,9 @@ export const exitTeam = asyncHandler(async (req: Request, res: Response) => {
   user.teamId = null;
   user.role = "MEMBER";
   await user.save();
+
+  // Notifications from the old team would link to inaccessible issues
+  await Notification.deleteMany({ recipient: user._id, teamId });
 
   // Re-issue token with cleared teamId so the client reflects the change immediately
   const token = createAuthToken(userId, "MEMBER", null);

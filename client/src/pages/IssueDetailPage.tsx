@@ -1,24 +1,26 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useGetIssueByIdQuery, useUpdateIssueMutation, useDeleteIssueMutation, useAddCommentMutation } from "@/services/issue.services";
+import {
+  useGetIssueByIdQuery,
+  useUpdateIssueMutation,
+  useDeleteIssueMutation,
+  useAddCommentMutation,
+  useDeleteCommentMutation,
+} from "@/services/issue.services";
 import { useGetTeamMembersQuery } from "@/services/team.services";
 import { useAppSelector } from "@/store/authSlice";
 import { StatusBadge, PriorityBadge, TypeBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, TYPE_OPTIONS } from "@/lib/issue-options";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import MentionCommentInput from "@/components/issues/MentionCommentInput";
+import IssueTimeline from "@/components/issues/IssueTimeline";
 import { Loader2, ArrowLeft, Trash2, CalendarIcon, X, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import type { IssueStatus, IssuePriority, IssueType } from "@/types/user.types";
-
-function getInitials(name: string) {
-  return name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
-}
 
 export default function IssueDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -26,13 +28,12 @@ export default function IssueDetailPage() {
   const user = useAppSelector((s) => s.auth.user);
 
   const { data, isLoading } = useGetIssueByIdQuery(id!);
-  // Only fetch the member list when this user can actually reassign (cached app-wide after the first fetch)
-  const needsMembers =
-    !!data?.data && (data.data.createdBy._id === user?._id || user?.role === "ADMIN");
-  const { data: membersData } = useGetTeamMembersQuery(undefined, { skip: !needsMembers });
+  // Team members query provides data for both reassignment and @mention autocomplete
+  const { data: membersData } = useGetTeamMembersQuery();
   const [updateIssue] = useUpdateIssueMutation();
   const [deleteIssue, { isLoading: isDeleting }] = useDeleteIssueMutation();
   const [addComment, { isLoading: isCommenting }] = useAddCommentMutation();
+  const [deleteComment, { isLoading: isDeletingComment }] = useDeleteCommentMutation();
 
   const [commentText, setCommentText] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -93,6 +94,15 @@ export default function IssueDetailPage() {
     }
   };
 
+  const handleDeleteComment = async (commentIndex: number) => {
+    try {
+      await deleteComment({ id: issue._id, commentIndex }).unwrap();
+      toast.success("Comment deleted");
+    } catch {
+      toast.error("Failed to delete comment");
+    }
+  };
+
   return (
     <div className="p-4 sm:p-6 max-w-4xl">
       <Button variant="ghost" size="sm" className="gap-1.5 mb-6 -ml-1 text-muted-foreground" onClick={() => navigate(-1)}>
@@ -132,41 +142,37 @@ export default function IssueDetailPage() {
 
           <Separator className="mb-6" />
 
-          {/* Comments */}
-          <h2 className="text-sm font-semibold mb-4">Comments ({issue.comments.length})</h2>
-          <div className="space-y-3 mb-6">
-            {issue.comments.map((c) => (
-              <div key={c._id} className="flex gap-3">
-                <Avatar className="h-7 w-7 flex-shrink-0 mt-0.5">
-                  <AvatarFallback className="text-[10px] bg-muted">
-                    {getInitials(c.userId.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-medium">{c.userId.name}</span>
-                    <span className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{c.text}</p>
-                </div>
-              </div>
-            ))}
-            {issue.comments.length === 0 && (
-              <p className="text-sm text-muted-foreground">No comments yet.</p>
-            )}
+          {/* Activity & Discussion Timeline */}
+          <div className="space-y-4 mb-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <span>Activity & Discussion</span>
+                <span className="text-xs font-normal text-muted-foreground px-2 py-0.5 rounded-full bg-muted">
+                  {issue.comments.length}
+                </span>
+              </h2>
+            </div>
+
+            <IssueTimeline
+              comments={issue.comments}
+              activities={issue.activities}
+              currentUserId={user?._id}
+              isAdmin={isAdmin}
+              onDeleteComment={handleDeleteComment}
+              isDeletingComment={isDeletingComment}
+            />
           </div>
 
-          <div className="flex gap-2">
-            <Textarea
-              placeholder="Add a comment..."
-              rows={2}
+          {/* Comment input with @mentions autocomplete */}
+          <div className="mt-6 pt-4 border-t border-border/60">
+            <MentionCommentInput
               value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              className="flex-1"
+              onChange={setCommentText}
+              onSubmit={handleComment}
+              isSubmitting={isCommenting}
+              members={membersData?.data ?? []}
+              placeholder="Write a comment or type @ to mention a teammate..."
             />
-            <Button size="sm" onClick={handleComment} disabled={isCommenting || !commentText.trim()} className="self-end">
-              {isCommenting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send"}
-            </Button>
           </div>
         </div>
 

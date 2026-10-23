@@ -3,6 +3,7 @@ import { Clock, Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/store/authSlice";
 import ThemeToggle from "@/components/ThemeToggle";
+import Logo from "@/components/Logo";
 
 export default function WaitingPage() {
   const navigate = useNavigate();
@@ -16,9 +17,8 @@ export default function WaitingPage() {
 
       <div className="w-full max-w-sm text-center space-y-6">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2.5">
-          <img src="/logo.png" alt="Trackly" className="w-8 h-8 rounded-lg shadow-sm object-contain" />
-          <span className="font-semibold text-xl tracking-tight">Trackly</span>
+        <div className="flex justify-center">
+          <Logo size={34} wordmarkClassName="text-xl" />
         </div>
 
         {/* Icon */}

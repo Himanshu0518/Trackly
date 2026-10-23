@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Trackly brand mark: kanban columns in a rounded tile.
+       #4b46e6 ≈ oklch(0.52 0.22 262) — the app's light-mode primary. -->
+  <rect width="32" height="32" rx="8" fill="#4b46e6"/>
+  <rect x="8.5" y="16" width="4" height="8" rx="2" fill="#ffffff" fill-opacity="0.6"/>
+  <rect x="14" y="12" width="4" height="12" rx="2" fill="#ffffff" fill-opacity="0.8"/>
+  <rect x="19.5" y="8" width="4" height="16" rx="2" fill="#ffffff"/>
+</svg>

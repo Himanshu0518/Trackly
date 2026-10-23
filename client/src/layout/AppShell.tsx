@@ -11,6 +11,8 @@ import { useAppSelector, useAppDispatch } from "@/store/authSlice";
 import { useLogOutMutation } from "@/services/auth.services";
 import { clearUser } from "@/store/authSlice";
 import ThemeToggle from "@/components/ThemeToggle";
+import Logo from "@/components/Logo";
+import NotificationCenter from "@/components/NotificationCenter";
 import { toast } from "sonner";
 import { tokenStore } from "@/lib/token-store";
 
@@ -96,16 +98,7 @@ export default function AppShell() {
       >
         {/* Logo */}
         <div className="h-14 flex items-center justify-between px-5 border-b border-sidebar-border shrink-0">
-          <div className="flex items-center gap-2.5">
-            <img
-              src="/logo.png"
-              alt="Trackly logo"
-              className="w-7 h-7 rounded-lg object-contain"
-            />
-            <span className="font-semibold text-sm tracking-tight text-sidebar-foreground">
-              Trackly
-            </span>
-          </div>
+          <Logo size={26} wordmarkClassName="text-sm" />
           <Button
             variant="ghost"
             size="icon-sm"
@@ -226,7 +219,10 @@ export default function AppShell() {
               <span className="text-foreground font-medium truncate">{currentPage}</span>
             </div>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <NotificationCenter />
+            <ThemeToggle />
+          </div>
         </header>
 
         {/* Page content */}
