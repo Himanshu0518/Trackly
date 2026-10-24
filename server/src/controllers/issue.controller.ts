@@ -14,6 +14,7 @@ import {
   findMentionedUsers,
   CreateNotificationParams,
 } from "@/utils/notification.util.js";
+import { getIO } from "@/sockets/index.js";
 
 // Fields a client is allowed to sort issues by (blocks arbitrary keys in the
 // Mongo sort clause)
@@ -174,6 +175,16 @@ export const createIssue = asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
+  // ── Real-time: tell the whole team a new issue appeared ───────────────────
+  // The client listens for "issue:created" and refreshes board/list/dashboard.
+  try {
+    getIO()
+      .to(`team:${teamId}`)
+      .emit("issue:created", { issueId: issue._id.toString(), issue });
+  } catch {
+    /* socket not yet initialised */
+  }
+
   res
     .status(201)
     .json(new ApiResponse(issue, "Issue created successfully", 201));
@@ -326,6 +337,15 @@ export const updateIssue = asyncHandler(async (req: Request, res: Response) => {
     { path: "activities.userId", select: "name email" },
   ]);
 
+  // ── Real-time: broadcast the change to everyone in the team ───────────────
+  // The client listens for "issue:updated" and applies the patch to its cache.
+  try {
+    getIO().to(`team:${teamId}`).emit("issue:updated", {
+      issueId: issue._id.toString(),
+      issue,                         // send the full populated doc
+    });
+  } catch { /* socket not yet ready */ }
+
   res.json(new ApiResponse(issue, "Issue updated successfully"));
 });
 
@@ -347,6 +367,16 @@ export const deleteIssue = asyncHandler(async (req: Request, res: Response) => {
   // Remove notifications pointing at the deleted issue so recipients don't
   // click through to a 404
   await Notification.deleteMany({ issueId: issue._id });
+
+  // ── Real-time: tell the team the issue is gone ─────────────────────────────
+  // The client listens for "issue:deleted" and drops it from board/list caches.
+  try {
+    getIO()
+      .to(`team:${teamId}`)
+      .emit("issue:deleted", { issueId: issue._id.toString() });
+  } catch {
+    /* socket not yet initialised */
+  }
 
   res.json(new ApiResponse(null, "Issue deleted successfully"));
 });
@@ -416,6 +446,19 @@ export const addComment = asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
+  // ── Real-time: push the new comment to everyone watching this issue ────────
+  // We target the issue-specific room (joined by anyone on the detail page)
+  // AND the whole team room (so the dashboard badge can update too).
+  const newComment = issue.comments[issue.comments.length - 1];
+  try {
+    const io = getIO();
+    const payload = { issueId: issue._id.toString(), comment: newComment };
+    io.to(`issue:${issue._id.toString()}`).emit("comment:new", payload);
+    io.to(`team:${teamId}`).emit("comment:new", payload);
+  } catch {
+    /* socket not yet initialised */
+  }
+
   res
     .status(201)
     .json(new ApiResponse(issue.comments, "Comment added successfully", 201));
@@ -446,6 +489,17 @@ export const deleteComment = asyncHandler(
 
     issue.comments.splice(index, 1);
     await issue.save();
+
+    // ── Real-time: tell watchers that this comment is gone ──────────────────
+    // The detail page re-fetches; other pages just refresh counts via Dashboard.
+    try {
+      const io = getIO();
+      const payload = { issueId: issue._id.toString(), commentIndex: index };
+      io.to(`issue:${issue._id.toString()}`).emit("comment:deleted", payload);
+      io.to(`team:${teamId}`).emit("comment:deleted", payload);
+    } catch {
+      /* socket not yet initialised */
+    }
 
     res.json(new ApiResponse(null, "Comment deleted successfully"));
   }

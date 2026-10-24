@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import { Notification, User } from "../models/index.js";
 import { NotificationType } from "../types/index.js";
+import { getIO } from "../sockets/index.js";
 
 export interface CreateNotificationParams {
   recipient: Types.ObjectId | string;
@@ -34,6 +35,21 @@ export async function createNotification(params: CreateNotificationParams) {
       link: params.link ?? `/issues/${params.issueId}`,
       read: false,
     });
+
+    // ── Real-time push ─────────────────────────────────────────────────────
+    // Populate sender name so the client can display it immediately
+    const populated = await notification.populate("sender", "name email");
+
+    try {
+      const io = getIO();
+      // Emit only to that specific user's private room
+      io.to(`user:${params.recipient.toString()}`).emit(
+        "notification:new",
+        populated
+      );
+    } catch {
+      // Socket.IO not yet initialised (e.g. during tests) — non-fatal
+    }
 
     return notification;
   } catch (err) {

@@ -44,7 +44,8 @@ Four primary collections keep the data model performant and maintainable:
 
 | Feature | Description |
 |---|---|
-| **Notification Center** | In-app notification center with real-time polling, unread badges, filter tabs, and direct link routing |
+| **Notification Center** | In-app notification center with real-time WebSocket push, unread badges, filter tabs, and direct link routing |
+| **Live Updates** | Socket.IO layer pushing issue creates/edits/deletes, comments, and notifications to every online teammate instantly |
 | **@Mention Tagging** | Intelligent mention parser (`@Name`, `@Email`) with interactive autocomplete dropdown and highlighted mention chips |
 | **Task Assignment Alerts** | Automated notifications dispatched when tasks are assigned or reassigned to teammates |
 | **Audit & Activity Log** | Chronological timeline tracking status transitions, priority changes, reassignments, and comments |
@@ -89,6 +90,7 @@ Four primary collections keep the data model performant and maintainable:
 | Validation | Zod |
 | Security | Helmet, CORS, cookie-parser |
 | Logging | Morgan |
+| Real-time | Socket.IO (shared HTTP server, room-based broadcasts) |
 
 ---
 
@@ -114,11 +116,27 @@ Trackly/
         ├── models/           # Mongoose schemas
         ├── routers/          # Express routers
         ├── middlewares/      # JWT, RBAC, Zod validation, error handler
+        ├── sockets/          # Socket.IO server, rooms, event catalog
         ├── validators/       # Zod request schemas
         ├── config/           # DB + environment config
         ├── utils/            # JWT helpers, response wrappers
         └── seed.ts           # Demo data seeder
 ```
+
+---
+
+## Real-Time Updates
+
+Every mutation is a normal REST write; once MongoDB confirms it, the server
+broadcasts to the right Socket.IO room (`user:<id>`, `team:<id>` or
+`issue:<id>`) and connected clients react by invalidating their RTK Query
+caches — so boards, lists, dashboards, comment threads and notification
+badges update live for every online teammate.
+
+Connections are authenticated per-socket with the same JWT as the REST API
+(`verifySocket` middleware), and rooms are scoped per team for tenant
+isolation. Full event catalog, architecture diagram, and a step-by-step
+explanation of how it all works: **[./WEBSOCKET.md](./WEBSOCKET.md)**.
 
 ---
 

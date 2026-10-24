@@ -22,10 +22,15 @@ import { Loader2, ArrowLeft, Trash2, CalendarIcon, X, AlertTriangle } from "luci
 import { toast } from "sonner";
 import type { IssueStatus, IssuePriority, IssueType } from "@/types/user.types";
 
+import { useSocketIssueSync } from "@/hooks/useSocketIssueSync";
+
 export default function IssueDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const user = useAppSelector((s) => s.auth.user);
+
+  // Live updates: new comments and field changes pushed over WebSocket
+  useSocketIssueSync(id);
 
   const { data, isLoading } = useGetIssueByIdQuery(id!);
   // Team members query provides data for both reassignment and @mention autocomplete

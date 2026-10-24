@@ -56,6 +56,7 @@ export const userApi = createApi({
 export const {
   useSignUpMutation,
   useLoginMutation,
+  useCurrentUserQuery,
   useLogOutMutation,
   useUpdateMeMutation,
   useGetAllUsersQuery,
